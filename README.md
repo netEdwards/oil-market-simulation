@@ -1,14 +1,14 @@
-#Oil Market Simulation
+# Oil Market Simulation
 
 Discrete-time agent-based simulation of supply shocks and price dynamics in an oil market.
 
-##Overview
+## Overview
 
 This project implements a discrete-time, agent-based simulation of a commodity market with scarce resources, using the oil industry as a representative case. The simulation models interactions between buyers and sellers under stochastic demand and examines how market prices, inventories, and unmet demand evolve following sudden supply disruptions.
 
 The model emphasizes decentralization and emergence: market-level behavior arises from local agent interactions rather than centralized optimization or global knowledge.
 
-##System Model
+## System Model
 
 The simulation consists of four primary components:
 
@@ -26,7 +26,7 @@ Exogenous disruptions that reduce production capacity for selected sellers over 
 
 Time advances in discrete steps, with production, demand generation, transactions, price updates, and logging occurring once per timestep.
 
-##Key Features
+## Key Features
 
 - Discrete-time agent-based modeling (ABM)
 - Stochastic demand generation
