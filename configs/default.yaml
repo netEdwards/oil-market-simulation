@@ -1,0 +1,11 @@
+seed: 42
+ticks: 120
+base_price: 100
+
+num_producers: 5
+num_consumers: 6
+
+shock:
+  tick: 40
+  duration: 20
+  multiplier: 0.7
