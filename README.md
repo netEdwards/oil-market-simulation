@@ -1,85 +1,146 @@
 # Oil Market Simulation
 
-Discrete-time agent-based simulation of supply shocks and price dynamics in an oil market.
+**CS 4632 -- Modeling & Simulation**\
+Adrian Edwards
 
-## Overview
+------------------------------------------------------------------------
 
-This project implements a discrete-time, agent-based simulation of a commodity market with scarce resources, using the oil industry as a representative case. The simulation models interactions between buyers and sellers under stochastic demand and examines how market prices, inventories, and unmet demand evolve following sudden supply disruptions.
+## Project Status
 
-The model emphasizes decentralization and emergence: market-level behavior arises from local agent interactions rather than centralized optimization or global knowledge.
+### What's Implemented So Far
 
-## System Model
+The current implementation provides a functioning discrete-time
+agent-based market simulation framework. The system includes:
 
-The simulation consists of four primary components:
+-   A discrete-time simulation loop (`Simulation.run()`)
+-   A `Market` class that aggregates supply and demand
+-   `Producer` and `Consumer` agent classes
+-   An exogenous `Shock` mechanism
+-   YAML-based configuration (`configs/default.yaml`)
+-   CSV output logging
+-   Automatic time-series visualization of price dynamics
 
-**Buyers**
-Generate stochastic demand and purchase from sellers subject to willingness-to-pay constraints.
+The model simulates supply--demand imbalance and updates price using an
+exponential feedback adjustment rule. Experimental runs demonstrate
+equilibrium convergence and predictable response to temporary supply
+shocks.
 
-**Sellers**
-Produce a limited resource, manage inventory, and adjust prices adaptively based on sales outcomes.
+------------------------------------------------------------------------
 
-**Market Mechanism**
-Facilitates transactions between buyers and sellers using rule-based allocation.
+### What's Still to Come
 
-**Shock Events**
-Exogenous disruptions that reduce production capacity for selected sellers over time.
+-   Explicit buyer--seller transaction processing
+-   Per-seller pricing and inventory tracking
+-   Implementation of "cheapest-of-K sellers" buyer selection logic
+-   Stochastic demand generation
+-   Extended performance metrics and scenario comparisons
 
-Time advances in discrete steps, with production, demand generation, transactions, price updates, and logging occurring once per timestep.
+------------------------------------------------------------------------
 
-## Key Features
+### Changes from Original Proposal
 
-- Discrete-time agent-based modeling (ABM)
-- Stochastic demand generation
-- Trait-based buyer willingness-to-pay
-- Adaptive seller pricing via feedback rules
-- Exogenous supply shock modeling
-- Reproducible simulation runs via random seeding
-- Structured logging for post-run analysis
+The original proposal specified explicit buyer--seller interactions with
+local seller sampling and transaction processing.
 
-## Repository Structure
+The current implementation instead uses an aggregate market-clearing
+mechanism with a global price update rule to establish a stable and
+testable simulation backbone before introducing transaction-level
+complexity.
 
-src/
-  agents/
-    buyer.py
-    seller.py
-  market.py
-  simulation.py
-  shocks.py
-  logging/
-    metrics_logger.py
-  config.py
-  main.py
+------------------------------------------------------------------------
 
-docs/
-  uml_classes.pdf
-  uml_activity.pdf
+## Installation Instructions
 
-outputs/
-  (generated simulation logs – gitignored)
+### Dependencies
 
-## Running the Simulation
+-   Python 3.10
+-   numpy \>= 1.26
+-   pandas \>= 2.1
+-   matplotlib \>= 3.8
+-   pyyaml \>= 6.0
 
-Implementation is in progress.
+All dependencies are defined in `pyproject.toml`.
 
-Planned usage:
+------------------------------------------------------------------------
 
-python -m src.main --seed 42
+### Step-by-Step Setup
 
-Simulation parameters (number of agents, demand distributions, shock schedules) will be configurable via a central configuration module.
+1.  Create a conda environment:
 
-## Outputs
+    conda create -n oil_sim python=3.10\
+    conda activate oil_sim
 
-Each simulation run will produce structured logs containing:
-= Seller prices and inventory levels
-= Transaction volumes
-- Unmet demand
-- Market response following shock events
-These outputs support both single-run inspection and aggregate statistical analysis across multiple runs.
+2.  Install the project in editable mode:
 
-## Status
+    python -m pip install -e .
 
-This repository currently contains the conceptual design, UML diagrams, and implementation scaffolding as part of an academic modeling and simulation project. Full implementation and experimental analysis will be developed in subsequent milestones.
+3.  Verify installation:
 
-License
+    python -c "import oilmarket; print('Installation successful')"
 
-MIT License
+------------------------------------------------------------------------
+
+### Troubleshooting Common Issues
+
+ModuleNotFoundError: oilmarket\
+Ensure the correct environment is activated and
+`python -m pip install -e .` was executed.
+
+yaml import error\
+Ensure `pyyaml` is installed via editable install.
+
+------------------------------------------------------------------------
+
+## Usage
+
+Run the simulation from the project root:
+
+python -m oilmarket
+
+Configuration is located in:
+
+configs/default.yaml
+
+Running the simulation generates:
+
+-   runs/`<timestamp>`/history.csv
+-   runs/`<timestamp>`/price.png
+
+------------------------------------------------------------------------
+
+## Architecture Overview
+
+### Main Components
+
+Simulation (`simulation.py`)\
+Controls time progression, applies shock state, logs simulation history.
+
+Market (`market.py`)\
+Aggregates supply and demand and updates price via exponential imbalance
+adjustment.
+
+Agents (`agents.py`)\
+- Producer: Supplies output based on price and capacity\
+- Consumer: Generates demand based on price elasticity
+
+Shock (`shocks.py`)\
+Encodes start time, duration, and multiplier for supply disruption.
+
+------------------------------------------------------------------------
+
+### Mapping to UML Design
+
+Simulation Engine → Simulation\
+Market → Market\
+Seller Agent → Producer\
+Buyer Agent → Consumer\
+Shock Event → Shock
+
+------------------------------------------------------------------------
+
+### Architectural Changes
+
+The architecture currently implements aggregate price clearing to ensure
+system stability.\
+Future milestones will introduce explicit transaction-level
+buyer--seller interactions and cheapest-of-K seller selection logic.
