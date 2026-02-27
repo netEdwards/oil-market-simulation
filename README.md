@@ -20,7 +20,7 @@ agent-based market simulation framework. The system includes:
 -   CSV output logging
 -   Automatic time-series visualization of price dynamics
 
-The model simulates supply--demand imbalance and updates price using an
+The model simulates supply-demand imbalance and updates price using an
 exponential feedback adjustment rule. Experimental runs demonstrate
 equilibrium convergence and predictable response to temporary supply
 shocks.
@@ -29,7 +29,7 @@ shocks.
 
 ### What's Still to Come
 
--   Explicit buyer--seller transaction processing
+-   Explicit buyer-seller transaction processing
 -   Per-seller pricing and inventory tracking
 -   Implementation of "cheapest-of-K sellers" buyer selection logic
 -   Stochastic demand generation
@@ -39,7 +39,7 @@ shocks.
 
 ### Changes from Original Proposal
 
-The original proposal specified explicit buyer--seller interactions with
+The original proposal specified explicit buyer-seller interactions with
 local seller sampling and transaction processing.
 
 The current implementation instead uses an aggregate market-clearing
@@ -130,11 +130,11 @@ Encodes start time, duration, and multiplier for supply disruption.
 
 ### Mapping to UML Design
 
-Simulation Engine → Simulation\
-Market → Market\
-Seller Agent → Producer\
-Buyer Agent → Consumer\
-Shock Event → Shock
+Simulation Engine -> Simulation\
+Market -> Market\
+Seller Agent -> Producer\
+Buyer Agent -> Consumer\
+Shock Event -> Shock
 
 ------------------------------------------------------------------------
 
