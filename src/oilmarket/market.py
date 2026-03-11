@@ -1,18 +1,24 @@
 from __future__ import annotations
 
+from hmac import new
 import math
 import random
 from dataclasses import dataclass, field
 from typing import Dict, List
 from oilmarket.agents.agents import Producer, Consumer
+from oilmarket.agents.buyer import Buyer
+from oilmarket.agents.seller import Seller
 
+"""
+This market class is old. It was for a demo of the concept....
 
+"""
 @dataclass
-class Market:
+class OldMarket:
     producers: List[Producer] = field(default_factory=list)
     consumers: List[Consumer] = field(default_factory=list)
     price: float = 100.0
-    k: float = 0.05
+    k: float = 0.1
     
     def reset(self, seed: int) -> None:
         random.seed(seed)
@@ -41,3 +47,32 @@ class Market:
             "total_supply": float(total_supply),
             "total_demand": float(total_demand),
         }
+        
+class Market:
+    def __init__(
+        self,
+        num_sellers: int = 0,
+        num_buyers: int = 0,
+        config: dict = None,
+        target_utilization: float = 0.0,
+        k: float = 0.80,
+        seed: int = None
+        ):
+        self.seed = seed
+        self.num_sellers = num_sellers
+        self.num_buyers = num_buyers
+        self.config = config
+        self.target_util = target_utilization
+        self.k = k
+        
+        self.sellers = []
+        
+        #initialize buyers and sellers
+        for i in range(self.num_sellers):
+            new_seller = Seller(price=config.seller.price, prod_rate=config.seller.prod_rate, target_util=target_utilization)
+            self.sellers.append()
+            
+        for i in range(self.num_buyers):
+            new_buyer = Buyer(mean_wtp=config.buyers[i].price, sigma=..., _min=..., _max=..., seed=self.seed)
+            
+    

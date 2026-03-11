@@ -5,7 +5,7 @@ import yaml
 from oilmarket.agents.agents import Producer, Consumer
 from .market import Market
 from oilmarket.shocks.shocks import Shock
-from src.simulation import Simulation, SimulationConfig
+from oilmarket.simulation import Simulation, SimulationConfig
 import os
 import csv
 from datetime import datetime

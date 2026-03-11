@@ -6,12 +6,6 @@ from typing import Any, Dict, List, Optional
 from oilmarket.market import Market
 from oilmarket.shocks.shocks import Shock
 
-
-@dataclass
-class SimulationConfig:
-    seed: int = 42
-    ticks: int = 100
-    shock: Optional[Dict[str, Any]] = None
     
 @dataclass
 class Simulation:

@@ -13,7 +13,7 @@ class Buyer:
     def __init__(
         self, 
         mean_wtp: float = 0.0, 
-        signma: float = 0.0, 
+        sigma: float = 0.0, 
         _min: float = 0.0, 
         _max: float = 0.0, 
         seed: str | int = None, 
@@ -24,7 +24,7 @@ class Buyer:
         self.id = str(uuid.uuid4())
         self.rng = np.random.default_rng(seed=seed)
         self.mean_wtp = mean_wtp
-        self.sigma = signma
+        self.sigma = sigma
         self._min = _min
         self._max = _max
         self.seed = seed 
