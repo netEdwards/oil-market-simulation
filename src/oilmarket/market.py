@@ -116,7 +116,7 @@ class Market:
                 
                 continue
             #use returned seller selection to create a transaction
-            transaction = self._process_transaction(buyer=b, seller=selected_seller)
+            transaction = self._process_transaction(buyer=b, seller=selected_seller, timestep=timestep)
             #update units sold for that seller
             selected_seller.inventory-= transaction.units_sold
             selected_seller.units_sold += transaction.units_sold
@@ -129,7 +129,7 @@ class Market:
             
         #create timestep state
         market_timestep = TimestepState(
-            timestep=self.timestep,
+            timestep=timestep,
             buyers=self.buyers,
             sellers=self.sellers,
             transactions=all_transactions,
@@ -141,13 +141,13 @@ class Market:
         # calculate new seller prices.
         for s in self.sellers:
             s.update_utilization()
-            s.calculate_new_price()
+            s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
 
         return market_timestep
 
 
 
-    def _process_transaction(self, buyer: Buyer, seller: Seller) -> Transaction:
+    def _process_transaction(self, buyer: Buyer, seller: Seller, timestep: int = None) -> Transaction:
         """
         Method to create a transaction in the market using subset of sellers k and then modifying seller and buyer instances. Result is a Transaction instance recording the transaction(s)
         
@@ -159,6 +159,9 @@ class Market:
         ##buyer demand is purchase amount
         #subtract buyer demand from seller inventory
         # 
+        #Timestep being none handle needs to be added
+        
+        
         units_sold = 0
         if buyer.demand > seller.inventory:
             units_sold = seller.inventory
@@ -166,7 +169,7 @@ class Market:
             units_sold = seller.inventory - buyer.demand
             
         transaction = Transaction(
-            timestep=self.timestep, 
+            timestep=timestep, 
             seller_id=seller.id, 
             buyer_id=buyer.id, 
             units_sold=units_sold, 
