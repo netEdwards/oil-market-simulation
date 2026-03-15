@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from oilmarket.market import Market
 from oilmarket.shocks.shocks import Shock
+from oilmarket.data.simulation import SimulationConfig
 
     
 @dataclass

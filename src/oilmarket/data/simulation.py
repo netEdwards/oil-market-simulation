@@ -61,6 +61,8 @@ class SimulationConfig:
     buyers: BuyerConfig
     sellers: SellerConfig
     
+    #ADD POST INIT?
+    
     @classmethod
     def from_yaml(cls, path: str | Path) -> "SimulationConfig":
         with open(path, "r", encoding="utf-8") as f:

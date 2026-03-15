@@ -6,6 +6,9 @@ from uuid import uuid4
 import uuid
 
 import numpy as np
+from numpy.random import Generator
+
+from oilmarket.agents.seller import Seller
 
 
 
@@ -19,10 +22,13 @@ class Buyer:
         seed: str | int = None, 
         active: bool = False, 
         lambda_demand: float = 4.0,
-        wtp: float = 0.0) -> None:
+        wtp: float = 0.0, #future shock use
+        rng: Generator = None,
+    ) -> None:
         
         self.id = str(uuid.uuid4())
-        self.rng = np.random.default_rng(seed=seed)
+        #self.rng = np.random.default_rng(seed=seed) MOVED TO MARKET FOR GLOBAL RNG USE IN AGENT BEHAVIOR
+        self.rng = rng #needs fault tolerance for missing rng input but is fine for now
         self.mean_wtp = mean_wtp
         self.sigma = sigma
         self._min = _min
@@ -31,8 +37,8 @@ class Buyer:
         self.active = active
         self.lambda_i = lambda_demand
         
-        self.wtp = self.generate_wtp()
-        self.demand = self.generate_demand()
+        self.wtp = self._generate_wtp()
+        self.demand = self.generate_demand() #may remove 
         
     
     def generate_demand(self):
@@ -43,14 +49,34 @@ class Buyer:
         return demand
         
         
-    def select_seller(self, k):
+    def select_seller(self, k: list[Seller]) -> Seller:
         """
         Method to select a seller from a given subset k sellers
         """
-        # for each seller in subset K is the price per unit lower than the wtp, then use demand to calculate how much they can buy from that seller. If they cannot buy all of there demand (due to supplier check and more) then demand is unmet. Next seller.
+        # for each seller in subset K is the price per unit lower than the wtp, 
+        # then use demand to calculate how much they can buy from that seller. 
+        # If they cannot buy all of there demand (due to supplier check and more) then demand is unmet. Next seller.
+        
+        if not k:
+            return None
+        
+        #Filter sellers where price is greater than wtp
+        demand_set = filter(lambda x: x.id >= self.wtp, k)
+        if not demand_set:
+            return None
+        
+        if len(demand_set) == 1:
+            return demand_set[0]
+        
+        cheapest_seller = k[0]
+        for s in demand_set:
+            if s.price < cheapest_seller.price:
+                cheapest_seller = s
+                
+        return s
         
         
-    def generate_wtp(self) -> float:
+    def _generate_wtp(self) -> float:
         """
         Function to generate the willingness to pay value for the simulation run. 
         """
