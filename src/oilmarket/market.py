@@ -61,16 +61,11 @@ class Market:
         self,
         config: SimulationConfig,
         responsiveness: float = 0,
-        timestep: int = None,
         ):
         self.config = config 
         seed        = self.config.seed
         self.rng    = np.random.default_rng(seed=seed)
         
-        
-        self.timestep = timestep
-        if not self.timestep:
-            raise Warning("No timestep was provided, this could affect logging and metrics in the simulation")
         
         
         # k = responsiveness (controls the scale at which sellers adjust prices in reaction to market changes.) 
@@ -88,7 +83,7 @@ class Market:
         self._init_sellers() #2 ✅
     
     
-    def run_market_timestep(self):
+    def run_market_timestep(self, timestep: int) -> TimestepState:
         """Calculates and simulates the current timestep in clearing order first calculations last. The market class will retain all state from the current/previous timestep until the this function is called again on the same instance.
         
         
@@ -148,6 +143,7 @@ class Market:
             s.update_utilization()
             s.calculate_new_price()
 
+        return market_timestep
 
 
 
