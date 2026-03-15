@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from oilmarket.data.state import TimestepState
 from oilmarket.market import Market
 from oilmarket.shocks.shocks import Shock
 from oilmarket.data.simulation import SimulationConfig
@@ -13,7 +14,7 @@ class Simulation:
     config: SimulationConfig
     market: Market
     shock: Optional[Shock] = None
-    history: List[Dict[str, Any]] = field(default_factory=list)
+    history: list[TimestepState]
     
     def run(self) -> List[Dict[str, Any]]:
         """Coor descrete time simulation loop.
@@ -21,26 +22,16 @@ class Simulation:
 
         """
         #1. Init / reset any run-state
-        self.market.reset(seed=self.config.seed)
+        self.market = Market(config=self.config)
         
         for t in range(self.config.ticks):
             #determine whetther shock is active this tick
-            shock_multiplier = 1.0
-            shock_active = False
-            if self.shock and self.shock.is_active(t):
-                shock_active = True
-                shock_multiplier = self.shock.multiplier
+            
                 
-            tick_result = self.market.step(tick=t, shock_multiplier=shock_multiplier)
+            tick_result = self.market.run_market_timestep(t)
             
             self.history.append(
-                {
-                    "t": t,
-                    "price": tick_result["price"],
-                    "total_supply": tick_result["total_supply"],
-                    "total_demand": tick_result["total_demand"],
-                    "shock_active": shock_active,
-                }
+                tick_result
             )
             
         return self.history
