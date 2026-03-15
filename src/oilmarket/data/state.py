@@ -7,14 +7,13 @@ import uuid
 
 @dataclass
 class Transaction:
-    id: str =               uuid.uuid4()
     timestep:               int
     seller_id:              str
     buyer_id:               str
     units_sold:             float = 0.0
     unit_price:             float = 0.0
     total_price:            float = 0.0
-    
+    id:                     str = uuid.uuid4()
 @dataclass
 class BuyerSnapshot:
     buyer_id:               str

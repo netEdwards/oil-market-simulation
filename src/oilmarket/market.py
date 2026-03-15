@@ -217,7 +217,8 @@ class Market:
                 _min=self.buyers_config.wtp._min,
                 _max=self.buyers_config.wtp._max,
                 seed=self.config.seed,
-                lambda_demand=self.buyers_config.demand.lambda_demand
+                lambda_demand=self.buyers_config.demand.lambda_demand,
+                rng=self.rng
             ))
         if not len(buyers) == num_buyers:
             raise Exception("ERROR: There was an issue when initializing all buyers in the market from the config.")

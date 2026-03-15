@@ -61,19 +61,12 @@ class Buyer:
             return None
         
         #Filter sellers where price is greater than wtp
-        demand_set = filter(lambda x: x.id >= self.wtp, k)
-        if not demand_set:
+        affordable = [s for s in k if s.price <= self.wtp]
+
+        if not affordable:
             return None
-        
-        if len(demand_set) == 1:
-            return demand_set[0]
-        
-        cheapest_seller = k[0]
-        for s in demand_set:
-            if s.price < cheapest_seller.price:
-                cheapest_seller = s
                 
-        return s
+        return min(affordable, key=lambda s: s.price)
         
         
     def _generate_wtp(self) -> float:
