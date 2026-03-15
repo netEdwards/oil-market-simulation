@@ -1,33 +1,38 @@
 
 from dataclasses import dataclass
+from typing import Literal
 import uuid
 
 
 
 class Seller:
-    price: float = 0.0
-    inventory: float = 0.0
-    prod_rate: float = 0.0
-    capacity: float = 0.0
+    price:      float = 0.0
+    inventory:  float = 0.0
+    prod_rate:  float = 0.0
+    capacity:   float = 0.0
 
     
     def __init__(
         self,
         id: str = "",
-        price:  float = 0.0,
-        inventory: float = 0.0,
-        prod_rate: float = 0.0,
-        capacity: float = 0.0,
-        target_util: float = 0.80
+        price:          float = 0.0,
+        inventory:      float = 0.0,
+        prod_rate:      float = 0.0,
+        capacity:       float = 0.0,
+        target_util:    float = 0.80,
+        tier:           Literal["major", "medium", "small"] = None,
         ):
-        self.id = str(uuid.uuid4())
-        self.price = price
-        self.inventory = inventory
-        self.prod_rate = prod_rate
-        self.capacity = capacity
-        self.utilization = 0
+        self.id          = str(uuid.uuid4())
+        self.price       = price
+        self.inventory   = inventory
+        self.prod_rate   = prod_rate
+        self.capacity    = capacity
         self.target_util = target_util
-        self.units_sold = 0
+        self.tier        = tier
+        
+        #variable util vars
+        self.utilization = 0
+        self.units_sold  = 0
         
         
     def update_utilization(self):
@@ -35,7 +40,8 @@ class Seller:
         """
         
         if self.units_sold == 0:
-            raise ValueError("Units sold is current 0.")
+            #log units sold as 0
+            return
         util = self.units_sold / self.prod_rate
         self.utilization = util
         
@@ -71,3 +77,9 @@ class Seller:
         t_uti = self.target_util
         new_price = max(0, (cur_price * (1+k*(util - t_uti)) ))
         self.price = round(new_price, 2)
+        
+    def update_units_sold(self, units):
+        if not type(units) == int:
+            raise ValueError("Type mismtach between input units and Seller.units_sold")
+        
+        self.units_sold = units
