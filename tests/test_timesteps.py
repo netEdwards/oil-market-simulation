@@ -20,6 +20,31 @@ def test_market_timestep_run():
     result = market.run_market_timestep(0)
     assert result
     assert type(result) == TimestepState
-    print(result)
+    print(
+        "======================================\n"
+        f"--TimestepState--\n",
+        f"Timestep: {result.timestep}\n",
+        f"Buyers: {len(result.buyers)}\n",
+        f"Sellers: {len(result.sellers)}\n",
+        f"Transactins: {len(result.transactions)}\n",
+        f"Total Units Sold: {result.total_units_sold}\n",
+        f"Total unmet demand: {result.total_unmet_demand}\n",
+        f"Average Price: {result.average_price}\n"
+        "======================================\n\n\n"
+    )
+    for t in result.transactions:
+        print(
+            "====Transactions that Occured====\n",
+            f"Timestep: {t.timestep}\n",
+            f"Seller: {t.seller_id}\n",
+            f"Buyer: {t.buyer_id}\n",
+            f"Units Sold: {t.units_sold}\n",
+            f"Unit Price: {t.unit_price}\n",
+            f"Buyer WTP: {t.buyer_wtp}\n",
+            f"Remaining demand: {t.remaining_demand}\n",
+            f"Total Price: {t.total_price}\n",
+            
+            f"Transaction ID: {t.id}\n\n\n"
+        )
     
     
