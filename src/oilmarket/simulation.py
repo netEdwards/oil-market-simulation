@@ -23,7 +23,7 @@ class Simulation:
         self.history: list[TimestepState] = []
         
     
-    def run(self) -> List[Dict[str, Any]]:
+    def run(self) -> list[TimestepState]:
         """Coor descrete time simulation loop.
         Each tick executes the conceptual 'activity diagram' steps in order.
 

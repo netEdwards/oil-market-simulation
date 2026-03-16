@@ -102,6 +102,7 @@ class Market:
         
         total_units_sold = 0
         total_unmet_demand = 0
+        sum_prices = 0
         
         for b in self.buyers:
             
@@ -113,7 +114,6 @@ class Market:
             if not selected_seller:
                 #NOTE: record unmet demand
                 total_unmet_demand+=b.demand
-                
                 continue
             #use returned seller selection to create a transaction
             transaction = self._process_transaction(buyer=b, seller=selected_seller, timestep=timestep)
@@ -123,19 +123,53 @@ class Market:
             
             #update demand for that buyer
             b.demand -= transaction.units_sold
+            total_units_sold+=transaction.units_sold
+            
             total_unmet_demand+=b.demand #demand is 0 then nothing is added to total unmet demand.
-
+            sum_prices+=transaction.unit_price
+            print("Transaction complete: ", transaction.id)
             all_transactions.append(transaction)
             
+        if len(all_transactions) < 1:
+            print("No transactions were made this timestep!")
+            print("Executing timestep review...")
+            print("Sellers Report:\n\n")
+            for s in self.sellers:
+                print(
+                    f"Current Seller: {s.id}\n",
+                    f"Inventory: {s.inventory}\n",
+                    f"Price: {s.price}"
+                )
+            print("Buyers report:\n\n")
+            total_wtp = 0
+            total_demand = 0
+            for b in self.buyers:
+                total_wtp+=b.wtp
+                total_demand+=b.demand
+            print(
+                f"Buyer average WTP: {total_wtp / len(self.buyers)}",
+                f"Buyer average demand: {total_demand / len(self.buyers)}"
+            ) 
+            print("Report Complete!")
+            return TimestepState(
+                timestep            = timestep,
+                buyers              = self.buyers,
+                sellers             = self.sellers,
+                transactions        = all_transactions,
+                total_units_sold    = total_units_sold,
+                total_unmet_demand  = total_unmet_demand,
+                average_price       = 0
+            )
+        
         #create timestep state
         market_timestep = TimestepState(
-            timestep=timestep,
-            buyers=self.buyers,
-            sellers=self.sellers,
-            transactions=all_transactions,
-            total_units_sold=...,
-            total_unmet_demand=...,
-            average_price=...
+            timestep            = timestep,
+            buyers              = self.buyers,
+            sellers             = self.sellers,
+            transactions        = all_transactions,
+            total_units_sold    = total_units_sold,
+            total_unmet_demand  = total_unmet_demand,
+            average_price       = (sum_prices/len(all_transactions))
         )
         
         # calculate new seller prices.
@@ -143,6 +177,8 @@ class Market:
             s.update_utilization()
             s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
 
+        print(f"Timestep {timestep} complete!\n Total transactions: {len(all_transactions)}")
+        
         return market_timestep
 
 
@@ -162,11 +198,22 @@ class Market:
         #Timestep being none handle needs to be added
         
         
-        units_sold = 0
+        units_sold = None
         if buyer.demand > seller.inventory:
             units_sold = seller.inventory
         elif buyer.demand < seller.inventory:
             units_sold = seller.inventory - buyer.demand
+        elif not units_sold:
+            return Transaction(
+                timestep=timestep, 
+                seller_id=seller.id, 
+                buyer_id=buyer.id, 
+                units_sold=0, 
+                unit_price=seller.price, 
+                total_price=0,
+                buyer_wtp=buyer.wtp,
+                remaining_demand=buyer.demand,
+            )
             
         transaction = Transaction(
             timestep=timestep, 
@@ -174,7 +221,9 @@ class Market:
             buyer_id=buyer.id, 
             units_sold=units_sold, 
             unit_price=seller.price, 
-            total_price=(units_sold * seller.price)
+            total_price=(units_sold * seller.price),
+            buyer_wtp=buyer.wtp,
+            remaining_demand=buyer.demand - units_sold
         )
         return transaction
             

@@ -13,6 +13,8 @@ class Transaction:
     units_sold:             float = 0.0
     unit_price:             float = 0.0
     total_price:            float = 0.0
+    buyer_wtp:              float = 0.0
+    remaining_demand:       float = 0.0
     id:                     str = uuid.uuid4()
 @dataclass
 class BuyerSnapshot:
