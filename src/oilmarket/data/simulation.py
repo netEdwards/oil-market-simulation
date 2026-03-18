@@ -60,6 +60,7 @@ class SimulationConfig:
     shock: ShockConfig
     buyers: BuyerConfig
     sellers: SellerConfig
+    output_path: str = Path(__file__).parent.parent.parent.parent / "runs"
     
     #ADD POST INIT?
     
@@ -67,6 +68,8 @@ class SimulationConfig:
     def from_yaml(cls, path: str | Path) -> "SimulationConfig":
         with open(path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
+            
+        
             
         return cls.from_dict(data)
     
