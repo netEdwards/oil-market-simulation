@@ -78,6 +78,7 @@ class Simulation:
 
             total_price = 0
             for s in t.sellers:
+                print(f"Showing price of seller: {s.id}, Price: {s.price}")
                 total_price += s.price
 
             avg = total_price / len(t.sellers)

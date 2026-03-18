@@ -127,7 +127,6 @@ class Market:
             
             total_unmet_demand+=b.demand #demand is 0 then nothing is added to total unmet demand.
             sum_prices+=transaction.unit_price
-            print("Transaction complete: ", transaction.id)
             all_transactions.append(transaction)
             
         if len(all_transactions) < 1:
@@ -160,6 +159,13 @@ class Market:
                 total_unmet_demand  = total_unmet_demand,
                 average_price       = 0
             )
+        #NOTE: Create Seller and Buyer Snapshots!!!!!
+        # -- Add them in place of the buyers and sellers in the TimestepState!!!!
+        
+        #for each seller snapshot their state create a list of them. 
+        #for each buyer do the same^
+        # assign them to the appropriate place in the TimestepState!
+        
         
         #create timestep state
         market_timestep = TimestepState(
