@@ -5,6 +5,8 @@ from typing import List
 import uuid
 
 
+
+
 @dataclass
 class Transaction:
     timestep:               int
@@ -23,7 +25,15 @@ class BuyerSnapshot:
     initial_demand:         float = 0.0
     remaining_demand:       float = 0.0
     unmet_demand:           float = 0.0
-
+    
+@dataclass
+class ShockSnapshot:
+    severity:               float = 0.0
+    tick:                   int = 0
+    prev_rate:              float = 0.0
+    new_rate:               float = 0.0
+    sellers_id:             str = ""
+ 
 @dataclass    
 class SellerSnapshot:
     seller_id:              str
@@ -34,12 +44,15 @@ class SellerSnapshot:
     units_sold:             float = 0.0
     utilization:            float = 0.0
     
+    
+    
 @dataclass
 class TimestepState:
     timestep:               int = 0
     buyers:                 List[BuyerSnapshot] = field(default_factory=list)
     sellers:                List[SellerSnapshot] = field(default_factory=list)
     transactions:           List[Transaction] = field(default_factory=list)
+    shock:                  List[ShockSnapshot] = field(default_factory=list)
     total_units_sold:       float = 0.0
     total_unmet_demand:     float = 0.0
     average_price:          float = 0.0

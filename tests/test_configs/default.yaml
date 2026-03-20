@@ -4,9 +4,10 @@ base_price: 100
 
 
 shock:
-  tick: 40
+  severity: 0.5
   duration: 20
-  multiplier: 0.7
+  start_time: 0.5
+  target: "top_seller"
 
 
 buyers:

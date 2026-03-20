@@ -29,7 +29,7 @@ def test_simulation_and_plots():
     s_config = SimulationConfig.from_yaml(cfg_path)
     simulation = Simulation(config=s_config)
     result = simulation.run()
-    simulation.export_history_json()
+    #simulation.export_history_json()
     #graph results
     path_str = simulation.plot_price()
     print("Prices plotted... \nchecking file.")

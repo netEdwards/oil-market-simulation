@@ -2,16 +2,10 @@
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
-
-@dataclass
-class ShockConfig:
-    tick: int
-    duration: int
-    multiplier: float
     
 @dataclass
 class BuyerWTPConfig:
@@ -51,6 +45,14 @@ class SellerConfig:
     medium: SellerTierConfig
     small: SellerTierConfig
     pricing: PricingConfig
+    
+@dataclass
+class ShockConfig:
+    severity: float
+    duration: int #the amount of timesteps it lasts
+    start_time: int | float #the starting timestep of the simulation. Float (fractional) input is the start time at some fraction of the total simulation duration in ticks. 
+    target: Literal["top_seller", "small_sellers"] #more options to come.
+    
     
 @dataclass
 class SimulationConfig:

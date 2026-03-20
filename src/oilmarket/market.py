@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from hmac import new
+
 import math
 import random
+
 import numpy as np
 
 from dataclasses import dataclass, field
@@ -11,7 +12,8 @@ from oilmarket.agents.agents import Producer, Consumer
 from oilmarket.agents.buyer import Buyer
 from oilmarket.agents.seller import Seller
 from oilmarket.data.simulation import BuyerConfig, SellerConfig, SimulationConfig
-from oilmarket.data.state import TimestepState, Transaction
+from oilmarket.data.state import BuyerSnapshot, SellerSnapshot, TimestepState, Transaction
+from oilmarket.shocks.shocks import Shock
 
 """
 This market class is old. It was for a demo of the concept....
@@ -65,6 +67,7 @@ class Market:
         self.config = config 
         seed        = self.config.seed
         self.rng    = np.random.default_rng(seed=seed)
+        self.shock = Shock(config=config)
         
         
         
@@ -89,7 +92,13 @@ class Market:
         
         """
         # Clear state. Replenish inventories. Calculate Demand.
+        # apply shocks
+        if self.shock.is_active(timestep):
+                self.shock.apply_shock(sellers=self.sellers, timestep=timestep)
+                
+        
         for s in self.sellers:
+            
             s.units_sold = 0
             s.utilization = 0
             s.replenish()
@@ -103,10 +112,12 @@ class Market:
         total_units_sold = 0
         total_unmet_demand = 0
         sum_prices = 0
+        buyer_snapshots = []
         
         for b in self.buyers:
             
             b.demand = b.generate_demand()
+            init_demand = b.demand
             #create subset of sellers k
             k = self._create_subset_sellers()
             #call select seller function
@@ -127,29 +138,37 @@ class Market:
             
             total_unmet_demand+=b.demand #demand is 0 then nothing is added to total unmet demand.
             sum_prices+=transaction.unit_price
+            
+            buyer_snapshots.append(BuyerSnapshot(
+                buyer_id=b.id,
+                wtp=b.wtp,
+                initial_demand=init_demand,
+                remaining_demand=b.demand
+            ))
+            
             all_transactions.append(transaction)
             
-        if len(all_transactions) < 1:
-            print("No transactions were made this timestep!")
-            print("Executing timestep review...")
-            print("Sellers Report:\n\n")
-            for s in self.sellers:
-                print(
-                    f"Current Seller: {s.id}\n",
-                    f"Inventory: {s.inventory}\n",
-                    f"Price: {s.price}"
-                )
-            print("Buyers report:\n\n")
-            total_wtp = 0
-            total_demand = 0
-            for b in self.buyers:
-                total_wtp+=b.wtp
-                total_demand+=b.demand
-            print(
-                f"Buyer average WTP: {total_wtp / len(self.buyers)}",
-                f"Buyer average demand: {total_demand / len(self.buyers)}"
-            ) 
-            print("Report Complete!")
+        # if len(all_transactions) < 1:
+        #     print("No transactions were made this timestep!")
+        #     print("Executing timestep review...")
+        #     print("Sellers Report:\n\n")
+        #     for s in self.sellers:
+        #         print(
+        #             f"Current Seller: {s.id}\n",
+        #             f"Inventory: {s.inventory}\n",
+        #             f"Price: {s.price}"
+        #         )
+        #     print("Buyers report:\n\n")
+        #     total_wtp = 0
+        #     total_demand = 0
+        #     for b in self.buyers:
+        #         total_wtp+=b.wtp
+        #         total_demand+=b.demand
+        #     print(
+        #         f"Buyer average WTP: {total_wtp / len(self.buyers)}",
+        #         f"Buyer average demand: {total_demand / len(self.buyers)}"
+        #     ) 
+        #     print("Report Complete!")
             return TimestepState(
                 timestep            = timestep,
                 buyers              = self.buyers,
@@ -166,22 +185,33 @@ class Market:
         #for each buyer do the same^
         # assign them to the appropriate place in the TimestepState!
         
+        seller_snapshots = []
+        # calculate new seller prices.
+        for s in self.sellers:
+            s.update_utilization()
+            seller_snapshots.append(SellerSnapshot(
+                seller_id=s.id,
+                price=s.price,
+                inventory=s.inventory,
+                prod_rate=s.prod_rate,
+                capacity=s.capacity,
+                units_sold=s.units_sold,
+                utilization=s.utilization
+            ))
+            s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
         
         #create timestep state
         market_timestep = TimestepState(
             timestep            = timestep,
-            buyers              = self.buyers,
-            sellers             = self.sellers,
+            buyers              = buyer_snapshots,
+            sellers             = seller_snapshots,
             transactions        = all_transactions,
             total_units_sold    = total_units_sold,
             total_unmet_demand  = total_unmet_demand,
             average_price       = (sum_prices/len(all_transactions))
         )
-        
-        # calculate new seller prices.
-        for s in self.sellers:
-            s.update_utilization()
-            s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
+
+            
 
         print(f"Timestep {timestep} complete!\n Total transactions: {len(all_transactions)}")
         

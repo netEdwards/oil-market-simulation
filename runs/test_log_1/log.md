@@ -1,0 +1,1 @@
+The yaml had a shock severity of 0.5 and lasted 20 ticks. The behavior showed that the prices ended up exponentially growing as the prod_rate reduced below 1.

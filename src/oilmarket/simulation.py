@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+import uuid
 
 from yaml import Mark
 import json
@@ -23,6 +24,7 @@ class Simulation:
         self.config = config
         self.market = Market(config=config)
         self.history: list[TimestepState] = []
+        self.run_id = uuid.uuid4()
         
     
     def run(self) -> list[TimestepState]:
@@ -63,7 +65,7 @@ class Simulation:
         plot.ylabel("Price")
         plot.ylim(min(valid_prices) - 2, max(valid_prices) + 2)
         plot.grid(True)
-        filename = "avg_price.png"
+        filename = f"avg_price-{self.run_id}.png"
         output_dir = self.config.output_path
         plot.savefig(output_dir / filename)
         return f"{output_dir}/{filename}"
@@ -78,7 +80,7 @@ class Simulation:
 
             total_price = 0
             for s in t.sellers:
-                print(f"Showing price of seller: {s.id}, Price: {s.price}")
+                
                 total_price += s.price
 
             avg = total_price / len(t.sellers)
@@ -87,7 +89,7 @@ class Simulation:
         print("\n\n Average Prices: ", avg_prices, "\n\n")
         return avg_prices
     
-    def export_history_json(self) -> str:
+    # def export_history_json(self) -> str:
         output_dir = self.config.output_path
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -100,7 +102,7 @@ class Simulation:
                 "timestep": state.timestep,
                 "buyers": [
                     {
-                        "id": b.id,
+                        "id": b.buyer_id,
                         "wtp": b.wtp,
                         "demand": b.demand,
                         "active": b.active,
