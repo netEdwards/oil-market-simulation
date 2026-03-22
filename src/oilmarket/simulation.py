@@ -89,7 +89,7 @@ class Simulation:
         print("\n\n Average Prices: ", avg_prices, "\n\n")
         return avg_prices
     
-    # def export_history_json(self) -> str:
+    def export_history_json(self) -> str:
         output_dir = self.config.output_path
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -104,23 +104,19 @@ class Simulation:
                     {
                         "id": b.buyer_id,
                         "wtp": b.wtp,
-                        "demand": b.demand,
-                        "active": b.active,
-                        "mean_wtp": b.mean_wtp,
-                        "sigma": b.sigma,
-                        "lambda_i": b.lambda_i,
+                        "demand": b.initial_demand,
+                        "wtp": b.wtp,
+                        "unmet_demand": b.unmet_demand,
                     }
                     for b in state.buyers
                 ],
                 "sellers": [
                     {
-                        "id": s.id,
+                        "id": s.seller_id,
                         "price": s.price,
                         "inventory": s.inventory,
                         "prod_rate": s.prod_rate,
                         "capacity": s.capacity,
-                        "target_util": s.target_util,
-                        "tier": s.tier,
                         "utilization": s.utilization,
                         "units_sold": s.units_sold,
                     }

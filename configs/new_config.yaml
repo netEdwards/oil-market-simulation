@@ -1,0 +1,47 @@
+seed: 42
+ticks: 120
+base_price: 100
+
+
+shock:
+  severity: 0.5
+  duration: 20
+  start_time: 0.5
+  target: "top_seller"
+
+
+buyers:
+  count: 100
+  wtp:
+    dist: truncated_nomral
+    mu: 125
+    sigma: 20.0
+    _min: 0.0 #usually stays at 0
+    _max: 300.0 # somehwere near the current base price
+  demand:
+    lambda_demand: 3
+
+sellers:
+  major:
+    count: 2
+    prod_rate: 80
+    capacity: 2000
+    init_inventory: 500
+    init_price: 130
+  medium:
+    count: 4
+    prod_rate: 50
+    capacity: 500
+    init_inventory: 150
+    init_price: 125
+  small:
+    count: 2
+    prod_rate: 20
+    capacity: 200
+    init_inventory: 150
+    init_price: 115
+  pricing:
+    min_price: 90
+    target_utilization: 0.80
+    responsiveness: 0.1
+

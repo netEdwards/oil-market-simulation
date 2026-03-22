@@ -1,0 +1,6 @@
+# New Observations
+- Price adjustement from the beginning is very large. This is due to the total demand being higher than the total production rate of all sellers. Initial prices started out around 80-90 per unit, but beyond just the first tick they began to jump to 200+ per unit. 
+- The shock is now functinal and observable. Its affect on pricing with this overbearing deman market was interesting. First like the previous point, prices jumped to around 200 per unit. Then they stabilized there - slowly climbing. Around tick 60 which is about when the shock begins to take effect, we see prices begin to surge and then after that they massively increase in one timestep. This is because once the major sellers from the shock were essentially eliminated - other sellers increased prices to satisfy the target utilization. 
+- After the shock ended, you can see a slow downward trend on average prices back toward the 200 per unit number. This is also interesting - this means that the utilization target and pricing adaptation equatiosn are working correctly, because the initial prices set in the simulation are no where near this. 
+- The market eventually levels back out. 
+- Responsiveness (*k*) would have a heavy effect on how the sellers respond to the shock and the beginning burden of massive demand. 

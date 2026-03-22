@@ -148,36 +148,7 @@ class Market:
             
             all_transactions.append(transaction)
             
-        # if len(all_transactions) < 1:
-        #     print("No transactions were made this timestep!")
-        #     print("Executing timestep review...")
-        #     print("Sellers Report:\n\n")
-        #     for s in self.sellers:
-        #         print(
-        #             f"Current Seller: {s.id}\n",
-        #             f"Inventory: {s.inventory}\n",
-        #             f"Price: {s.price}"
-        #         )
-        #     print("Buyers report:\n\n")
-        #     total_wtp = 0
-        #     total_demand = 0
-        #     for b in self.buyers:
-        #         total_wtp+=b.wtp
-        #         total_demand+=b.demand
-        #     print(
-        #         f"Buyer average WTP: {total_wtp / len(self.buyers)}",
-        #         f"Buyer average demand: {total_demand / len(self.buyers)}"
-        #     ) 
-        #     print("Report Complete!")
-            return TimestepState(
-                timestep            = timestep,
-                buyers              = self.buyers,
-                sellers             = self.sellers,
-                transactions        = all_transactions,
-                total_units_sold    = total_units_sold,
-                total_unmet_demand  = total_unmet_demand,
-                average_price       = 0
-            )
+        
         #NOTE: Create Seller and Buyer Snapshots!!!!!
         # -- Add them in place of the buyers and sellers in the TimestepState!!!!
         
@@ -198,7 +169,20 @@ class Market:
                 units_sold=s.units_sold,
                 utilization=s.utilization
             ))
+            #Update price after, record previous price.
             s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
+        
+        if len(all_transactions) < 1:
+            print(f"No transactions occured this timestep.... ")
+            return TimestepState(
+                timestep            = timestep,
+                buyers              = buyer_snapshots,
+                sellers             = seller_snapshots,
+                transactions        = all_transactions,
+                total_units_sold    = total_units_sold,
+                total_unmet_demand  = total_unmet_demand,
+                average_price       = 0
+            )
         
         #create timestep state
         market_timestep = TimestepState(
