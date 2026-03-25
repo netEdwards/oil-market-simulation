@@ -1,6 +1,14 @@
-from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QLabel,
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QStackedWidget,
+)
 from PySide6.QtCore import QSize, Qt
 
+from app.screens.new_experiment import NewExperimentScreen
 
 
 class MainWindow(QMainWindow):
@@ -8,42 +16,92 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Oil Market Simulation Experiments")
         self.resize(QSize(800, 600))
-        self.setMinimumSize(QSize(800, 600)) #in pixels
-        # Set central widget
-        self.set_central_widget()
-        
-        
-        
-    def set_central_widget(self):
-        central = QWidget()
+        self.setMinimumSize(QSize(800, 600))
+
+        self._set_central_widget()
+        self._connect_signals()
+        self.show_home_screen()
+
+    def _set_central_widget(self):
+        self.stack = QStackedWidget()
+
+        self.home_page = self._build_home_screen()
+        self.new_experiment_page = NewExperimentScreen(
+            on_cancel=self.show_home_screen
+        )
+
+        self.stack.addWidget(self.home_page)
+        self.stack.addWidget(self.new_experiment_page)
+
+        self.setCentralWidget(self.stack)
+
+    def _build_home_screen(self) -> QWidget:
+        page = QWidget()
         outer_layout = QVBoxLayout()
-        central.setLayout(outer_layout)
-        
-        
-        title_label = QLabel("Market Experiments", alignment=Qt.AlignmentFlag.AlignCenter)
-        font = title_label.font()
-        font.setPointSize(20)
-        title_label.setFont(font)
-        
+        page.setLayout(outer_layout)
+
         menu_container = QWidget()
         menu_container.setFixedWidth(400)
         menu_layout = QVBoxLayout()
+        menu_layout.setSpacing(12)
         menu_container.setLayout(menu_layout)
-        
-        new_experiment_button = QPushButton("New Experiment")
-        view_experiments_button = QPushButton("View Experiments")
-        new_baseline_button = QPushButton("New Baseline")
-        exit_button = QPushButton("Exit")
+
+        title_label = QLabel("Market Experiments")
+        title_label.setAlignment(Qt.AlignCenter)
+
+        font = title_label.font()
+        font.setPointSize(20)
+        font.setBold(True)
+        title_label.setFont(font)
+
+        self.new_experiment_button = QPushButton("New Experiment")
+        self.view_experiments_button = QPushButton("View Experiments")
+        self.new_baseline_button = QPushButton("New Baseline")
+        self.exit_button = QPushButton("Exit")
+
+        self.new_experiment_button.setMinimumHeight(40)
+        self.view_experiments_button.setMinimumHeight(40)
+        self.new_baseline_button.setMinimumHeight(40)
+        self.exit_button.setMinimumHeight(40)
+
         menu_layout.addWidget(title_label)
-        menu_layout.addWidget(new_experiment_button)
-        menu_layout.addWidget(view_experiments_button)
-        menu_layout.addWidget(new_baseline_button)
-        menu_layout.addWidget(exit_button)
-        
+        menu_layout.addWidget(self.new_experiment_button)
+        menu_layout.addWidget(self.view_experiments_button)
+        menu_layout.addWidget(self.new_baseline_button)
+        menu_layout.addWidget(self.exit_button)
+
         outer_layout.addStretch()
-        outer_layout.addWidget(menu_container, alignment=Qt.AlignmentFlag.AlignCenter)
+        outer_layout.addWidget(menu_container, alignment=Qt.AlignCenter)
         outer_layout.addStretch()
-        
-        self.setCentralWidget(central)
-        
-        
+
+        return page
+
+    def _connect_signals(self):
+        self.new_experiment_button.clicked.connect(
+            self._on_new_experiment_button_clicked
+        )
+        self.view_experiments_button.clicked.connect(
+            self._on_view_experiments_button_clicked
+        )
+        self.new_baseline_button.clicked.connect(
+            self._on_new_baseline_button_clicked
+        )
+        self.exit_button.clicked.connect(self._on_exit_button_clicked)
+
+    def show_home_screen(self):
+        self.stack.setCurrentWidget(self.home_page)
+
+    def show_new_experiment_screen(self):
+        self.stack.setCurrentWidget(self.new_experiment_page)
+
+    def _on_new_experiment_button_clicked(self):
+        self.show_new_experiment_screen()
+
+    def _on_view_experiments_button_clicked(self):
+        print("View Experiments screen not implemented yet.")
+
+    def _on_new_baseline_button_clicked(self):
+        print("New Baseline screen not implemented yet.")
+
+    def _on_exit_button_clicked(self):
+        self.close()
