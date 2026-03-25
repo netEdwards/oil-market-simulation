@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import QSize, Qt
 
 from app.screens.new_experiment import NewExperimentScreen
+from app.screens.view_experiments import ViewExperimentsScreen
 
 
 class MainWindow(QMainWindow):
@@ -27,11 +28,19 @@ class MainWindow(QMainWindow):
 
         self.home_page = self._build_home_screen()
         self.new_experiment_page = NewExperimentScreen(
-            on_cancel=self.show_home_screen
+            on_cancel=self.show_home_screen,
+            on_saved=self.show_home_screen,
         )
 
+        self.view_experiments_page = ViewExperimentsScreen(
+            on_back=self.show_home_screen,
+            on_view=self._on_view_experiment_requested,
+            on_edit=self._on_edit_experiment_requested,
+        )
+        
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.new_experiment_page)
+        self.stack.addWidget(self.view_experiments_page)
 
         self.setCentralWidget(self.stack)
 
@@ -91,14 +100,21 @@ class MainWindow(QMainWindow):
     def show_home_screen(self):
         self.stack.setCurrentWidget(self.home_page)
 
-    def show_new_experiment_screen(self):
-        self.stack.setCurrentWidget(self.new_experiment_page)
+    def show_view_experiments_screen(self):
+        self.view_experiments_page.refresh()
+        self.stack.setCurrentWidget(self.view_experiments_page)
 
     def _on_new_experiment_button_clicked(self):
         self.show_new_experiment_screen()
 
     def _on_view_experiments_button_clicked(self):
-        print("View Experiments screen not implemented yet.")
+        self.show_view_experiments_screen()
+        
+    def _on_view_experiment_requested(self, experiment: dict):
+        print(f'View requested for: {experiment.get("name")}')
+
+    def _on_edit_experiment_requested(self, experiment: dict):
+        print(f'Edit requested for: {experiment.get("name")}')
 
     def _on_new_baseline_button_clicked(self):
         print("New Baseline screen not implemented yet.")
