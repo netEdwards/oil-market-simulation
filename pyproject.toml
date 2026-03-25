@@ -18,7 +18,8 @@ dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
     "matplotlib>=3.8",
-    "pytest>=9.0.2"
+    "pytest>=9.0.2",
+    "pyside6>=6.11.0",
 ]
 
 [tool.setuptools]
