@@ -63,12 +63,13 @@ class Market:
         self,
         config: SimulationConfig,
         responsiveness: float = 0,
+        do_shock: bool = True,
         ):
         self.config = config 
         seed        = self.config.seed
         self.rng    = np.random.default_rng(seed=seed)
         self.shock = Shock(config=config)
-        
+        self.do_shock = do_shock
         
         
         # k = responsiveness (controls the scale at which sellers adjust prices in reaction to market changes.) 
@@ -93,7 +94,7 @@ class Market:
         """
         # Clear state. Replenish inventories. Calculate Demand.
         # apply shocks
-        if self.shock.is_active(timestep):
+        if self.shock.is_active(timestep) and self.do_shock:
                 self.shock.apply_shock(sellers=self.sellers, timestep=timestep)
                 
         
