@@ -43,6 +43,14 @@ class Simulation:
             
         return self.history
     
+    
+    
+    """
+    ==========================================
+    Data aggregration and output creation
+    ==========================================
+    """
+    
     def plot_price(self, avg_prices: list[float] = None) -> str:
         """Generates a plot of prices over time using matplotlib. 
         To automatically calulate seller average prices in order, leave param avg_prices as None (default).
@@ -69,27 +77,17 @@ class Simulation:
         output_dir = self.config.output_path
         plot.savefig(output_dir / filename)
         return f"{output_dir}/{filename}"
-        
-    def _calculate_avg_prices(self) -> list[float]:
-        """Returns the average seller price for each timestep."""
-        avg_prices = []
-
-        for t in self.history:
-            if not t.sellers:
-                continue
-
-            total_price = 0
-            for s in t.sellers:
-                
-                total_price += s.price
-
-            avg = total_price / len(t.sellers)
-            avg_prices.append(avg)
-
-        print("\n\n Average Prices: ", avg_prices, "\n\n")
-        return avg_prices
     
-    def export_history_json(self) -> str:
+    
+    """
+    ==========================================
+    Utility and private functions
+    ==========================================
+    """
+    
+    
+    
+    def export_history_json(self) -> str: 
         output_dir = self.config.output_path
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -144,3 +142,44 @@ class Simulation:
             json.dump(history_payload, f, indent=2, default=str)
 
         return str(filepath)
+    
+    def _build_timestep_rows(self):
+        """Takes self.history and creates a dict of timestep attrs (not nested attrs)"""
+        rows = []
+        for t in self.history:
+            row = {
+                "run_id":                   self.run_id,
+                "timestep":                 t.timestep,
+                "total_units_sold":         t.total_units_sold,
+                "total_demand":             t.total_demand,
+                "total_inventory":          t.total_inventory,
+                "total_supply_available":   t.total_supply_available,
+                "min_price":                t.min_price,
+                "max_price":                t.max_price,
+                "shock_active":             t.shock_active,
+                "total_unmet_demand":       t.total_unmet_demand,
+                "average_price":            t.average_price,
+                "transaction_count" :       t.transaction_count,
+            }
+            rows.append(row)
+            
+        return rows
+    
+    def _calculate_avg_prices(self) -> list[float]:
+        """Returns the average seller price for each timestep."""
+        avg_prices = []
+
+        for t in self.history:
+            if not t.sellers:
+                continue
+
+            total_price = 0
+            for s in t.sellers:
+                
+                total_price += s.price
+
+            avg = total_price / len(t.sellers)
+            avg_prices.append(avg)
+
+        print("\n\n Average Prices: ", avg_prices, "\n\n")
+        return avg_prices
