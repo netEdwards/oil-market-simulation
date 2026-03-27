@@ -13,7 +13,7 @@ shock:
 buyers:
   count: 100
   wtp:
-    dist: truncated_nomral
+    dist: truncated_normal
     mu: 100
     sigma: 20.0
     _min: 0.0 #usually stays at 0

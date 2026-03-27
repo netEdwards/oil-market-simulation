@@ -1,0 +1,47 @@
+seed: 
+ticks: 
+base_price: 
+
+
+shock:
+  severity: 
+  duration: 
+  start_time: 
+  target: 
+
+
+buyers:
+  count: 
+  wtp:
+    dist: truncated_normal #only option : not in use
+    mu: 
+    sigma: 
+    _min: 
+    _max: 
+  demand:
+    lambda_demand: 
+
+sellers:
+  major:
+    count: 
+    prod_rate: 
+    capacity: 
+    init_inventory: 
+    init_price: 
+  medium:
+    count: 
+    prod_rate: 
+    capacity: 
+    init_inventory: 
+    init_price: 
+  small:
+    count: 
+    prod_rate: 
+    capacity: 
+    init_inventory: 
+    init_price: 
+  pricing:
+    min_price: 
+    target_utilization: 
+    responsiveness: 
+
