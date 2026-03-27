@@ -21,6 +21,9 @@ dependencies = [
     "pytest>=9.0.2"
 ]
 
+[project.scripts]
+oilmarket = "oilmarket.cli:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
