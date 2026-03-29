@@ -63,7 +63,6 @@ class Market:
         self,
         config: SimulationConfig,
         responsiveness: float = 0,
-        do_shock: bool = True,
         ):
         self.config = config 
         seed        = self.config.seed
