@@ -17,13 +17,12 @@ class Transaction:
     total_price:            float = 0.0
     buyer_wtp:              float = 0.0
     remaining_demand:       float = 0.0
-    id:                     str = uuid.uuid4()
+    id:                     str = field(default_factory=lambda: str(uuid.uuid4()))
 @dataclass
 class BuyerSnapshot:
     buyer_id:               str
     wtp:                    float
     initial_demand:         float = 0.0
-    remaining_demand:       float = 0.0
     unmet_demand:           float = 0.0
     
 @dataclass
@@ -52,7 +51,14 @@ class TimestepState:
     buyers:                 List[BuyerSnapshot] = field(default_factory=list)
     sellers:                List[SellerSnapshot] = field(default_factory=list)
     transactions:           List[Transaction] = field(default_factory=list)
-    shock:                  List[ShockSnapshot] = field(default_factory=list)
+    shocks:                 List[ShockSnapshot] = field(default_factory=list)
     total_units_sold:       float = 0.0
+    total_demand:           float = 0.0
+    total_inventory:        float = 0.0
+    total_supply_available: float = 0.0
+    min_price:              float = 0.0
+    max_price:              float = 0.0
+    shock_active:           bool = False
     total_unmet_demand:     float = 0.0
     average_price:          float = 0.0
+    transaction_count:      int = 0

@@ -22,6 +22,9 @@ dependencies = [
     "pyside6>=6.11.0",
 ]
 
+[project.scripts]
+oilmarket = "oilmarket.cli:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 

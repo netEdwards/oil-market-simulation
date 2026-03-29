@@ -69,7 +69,8 @@ class Market:
         seed        = self.config.seed
         self.rng    = np.random.default_rng(seed=seed)
         self.shock = Shock(config=config)
-        self.do_shock = do_shock
+        self.shock_active = False
+        
         
         
         # k = responsiveness (controls the scale at which sellers adjust prices in reaction to market changes.) 
@@ -92,75 +93,104 @@ class Market:
         
         
         """
-        # Clear state. Replenish inventories. Calculate Demand.
-        # apply shocks
-        if self.shock.is_active(timestep) and self.do_shock:
+        # Apply shock if applicable
+        if self.shock.is_active(timestep):
                 self.shock.apply_shock(sellers=self.sellers, timestep=timestep)
+                self.shock_active = True
                 
         
+        
+        # Setup pre-timestep resets for sellers.
         for s in self.sellers:
-            
             s.units_sold = 0
             s.utilization = 0
             s.replenish()
-            
+        
+        total_available_supply = sum(s.inventory for s in self.sellers)
+        
+        # Currently buyers are not set to inactive but keeping for now.
         for b in self.buyers:
             b.active = True
-            # REMAINING DEMAND"??? -- Just use the demand value for now, subtract units sold from demand.
-        all_transactions = []
-        # create loop to eval each buyer this timestep.
         
+        # Prep temp values
+        all_transactions = []
         total_units_sold = 0
         total_unmet_demand = 0
+        total_demand = 0
+        total_inventory = 0
+        transaction_count = 0
+        
         sum_prices = 0
         buyer_snapshots = []
         
+        #=============================================================
+        #                       MAIN LOOP
+        # -- Loop through each buyer to attempt to fulfill demand. --
+        #=============================================================
+        
         for b in self.buyers:
             
-            b.demand = b.generate_demand()
-            init_demand = b.demand
-            #create subset of sellers k
-            k = self._create_subset_sellers()
-            #call select seller function
-            selected_seller = b.select_seller(k=k)
+            
+            
+            b.demand = b.generate_demand()  # New demand for this timestep
+            init_demand = b.demand          # Set this as the initial demand for record later
+            
+            k = self._create_subset_sellers()       # Create subset of sellers K to simulate some search effort for buyers
+            selected_seller = b.select_seller(k=k)  # Call on the buyers class .select_seller() to select a seller
+            
             if not selected_seller:
-                #NOTE: record unmet demand
                 total_unmet_demand+=b.demand
+                
+                # Add snapshot for no sellers selected
+                buyer_snapshots.append(BuyerSnapshot(
+                    buyer_id=b.id,
+                    wtp=b.wtp,
+                    initial_demand=init_demand,
+                    unmet_demand=b.demand,
+                ))
+                
                 continue
-            #use returned seller selection to create a transaction
+            
+            # TRANSACTION PROCESS
             transaction = self._process_transaction(buyer=b, seller=selected_seller, timestep=timestep)
-            #update units sold for that seller
             selected_seller.inventory-= transaction.units_sold
             selected_seller.units_sold += transaction.units_sold
-            
-            #update demand for that buyer
             b.demand -= transaction.units_sold
-            total_units_sold+=transaction.units_sold
             
-            total_unmet_demand+=b.demand #demand is 0 then nothing is added to total unmet demand.
+            # Metrics
+            total_units_sold+=transaction.units_sold
+            total_unmet_demand+=b.demand 
+            total_demand+=init_demand #use init_demand because its the demand present before a transaction
             sum_prices+=transaction.unit_price
             
-            buyer_snapshots.append(BuyerSnapshot(
+            # Snapshot creation
+            buyer_snapshots.append(BuyerSnapshot( 
                 buyer_id=b.id,
                 wtp=b.wtp,
                 initial_demand=init_demand,
-                remaining_demand=b.demand
+                unmet_demand=b.demand
             ))
             
-            all_transactions.append(transaction)
-            
+            all_transactions.append(transaction) # Add this transaction to list of all trx
         
-        #NOTE: Create Seller and Buyer Snapshots!!!!!
-        # -- Add them in place of the buyers and sellers in the TimestepState!!!!
+        ## -- ===================================================== --
         
-        #for each seller snapshot their state create a list of them. 
-        #for each buyer do the same^
-        # assign them to the appropriate place in the TimestepState!
-        
+        #-------------------------------------------------------------
+        # Update sellers and record metrics/state
+        #-------------------------------------------------------------
         seller_snapshots = []
-        # calculate new seller prices.
+        min_price = self.config.sellers.pricing.min_price
+        max_price = 0
         for s in self.sellers:
-            s.update_utilization()
+            s.update_utilization() # Update the util (MUST DO BEFORE SNAPSHOT OR IT WILL REFLECT PREV TIMESTEPS UTIL!)
+            
+            total_inventory += s.inventory
+            if s.price < min_price:
+                min_price = s.price
+                
+            if s.price > max_price:
+                max_price = s.price
+            
             seller_snapshots.append(SellerSnapshot(
                 seller_id=s.id,
                 price=s.price,
@@ -170,33 +200,49 @@ class Market:
                 units_sold=s.units_sold,
                 utilization=s.utilization
             ))
-            #Update price after, record previous price.
-            s.calculate_new_price(k = self.sellers_config.pricing.responsiveness)
+            
+            
+            # --FINAL UPDATES TO SELLERS THIS TIMESTEP--
+            s.calculate_new_price(k = self.sellers_config.pricing.responsiveness) # Calc new price for next timestep
+        
+        #---------------------------------------------------------------
         
         if len(all_transactions) < 1:
             print(f"No transactions occured this timestep.... ")
             return TimestepState(
-                timestep            = timestep,
-                buyers              = buyer_snapshots,
-                sellers             = seller_snapshots,
-                transactions        = all_transactions,
-                total_units_sold    = total_units_sold,
-                total_unmet_demand  = total_unmet_demand,
-                average_price       = 0
+                timestep                = timestep,
+                buyers                  = buyer_snapshots,
+                sellers                 = seller_snapshots,
+                transactions            = all_transactions,
+                total_units_sold        = total_units_sold,
+                total_unmet_demand      = total_unmet_demand,
+                average_price           = 0,
+                total_demand            = total_demand,
+                total_inventory         = total_inventory,
+                total_supply_available  = total_available_supply,
+                min_price               = min_price,
+                max_price               = max_price,
+                shock_active            = self.shock_active,
+                transaction_count       = len(all_transactions),
             )
         
-        #create timestep state
+        
         market_timestep = TimestepState(
-            timestep            = timestep,
-            buyers              = buyer_snapshots,
-            sellers             = seller_snapshots,
-            transactions        = all_transactions,
-            total_units_sold    = total_units_sold,
-            total_unmet_demand  = total_unmet_demand,
-            average_price       = (sum_prices/len(all_transactions))
+            timestep                = timestep,
+            buyers                  = buyer_snapshots,
+            sellers                 = seller_snapshots,
+            transactions            = all_transactions,
+            total_units_sold        = total_units_sold,
+            total_unmet_demand      = total_unmet_demand,
+            average_price           = (sum_prices/len(all_transactions)),
+            total_demand            = total_demand,
+            total_inventory         = total_inventory,
+            total_supply_available  = total_available_supply,
+            min_price               = min_price,
+            max_price               = max_price,
+            shock_active            = self.shock_active,
+            transaction_count       = len(all_transactions),
         )
-
-            
 
         print(f"Timestep {timestep} complete!\n Total transactions: {len(all_transactions)}")
         
@@ -219,12 +265,8 @@ class Market:
         #Timestep being none handle needs to be added
         
         
-        units_sold = None
-        if buyer.demand > seller.inventory:
-            units_sold = seller.inventory
-        elif buyer.demand < seller.inventory:
-            units_sold = seller.inventory - buyer.demand
-        elif not units_sold:
+        units_sold = min(buyer.demand, seller.inventory)
+        if units_sold <= 0:
             return Transaction(
                 timestep=timestep, 
                 seller_id=seller.id, 
@@ -263,9 +305,7 @@ class Market:
         """
         subset = self.rng.choice(self.sellers, size=size_k, replace=False)
         return subset.tolist()
-                
-        
-        #created function to extract config values:
+
     def _init_config(self):
         if not self.config:
             raise ValueError("Configuration is corrupt or missing.")
@@ -277,8 +317,7 @@ class Market:
         self.sellers_config = self.config.sellers
         self.base_price     = self.config.base_price
         self.seed           = self.config.seed
-            
-            
+                     
     def _init_buyers(self) -> None:
         buyers = []
         
@@ -306,7 +345,7 @@ class Market:
         m_count = majors.count
         for i in range(m_count):
             sellers.append(Seller(
-                price=majors.init_price | self.config.base_price,
+                price=majors.init_price or self.config.base_price,
                 inventory=majors.init_inventory,
                 capacity=majors.capacity,
                 prod_rate=majors.prod_rate,

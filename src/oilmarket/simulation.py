@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+import csv
+from typing import Any
 import uuid
-
-from yaml import Mark
 import json
-from dataclasses import asdict
 from pathlib import Path
 from oilmarket.data.state import TimestepState
 from oilmarket.market import Market
@@ -16,7 +13,6 @@ from oilmarket.data.simulation import SimulationConfig
 import matplotlib.pyplot as plot
 
 class Simulation:
-    
     def __init__(
         self,
         config: SimulationConfig,
@@ -25,6 +21,8 @@ class Simulation:
         self.market = Market(config=config)
         self.history: list[TimestepState] = []
         self.run_id = uuid.uuid4()
+        self.output_path = Path(self.config.output_path) / f"run-{self.run_id}"
+        self.output_path.mkdir(parents=True, exist_ok=True)
         
     
     def run(self) -> list[TimestepState]:
@@ -43,57 +41,109 @@ class Simulation:
             
         return self.history
     
-    def plot_price(self, avg_prices: list[float] = None) -> str:
-        """Generates a plot of prices over time using matplotlib. 
-        To automatically calulate seller average prices in order, leave param avg_prices as None (default).
-        
-        Args:
-        - avg_prices: The average seller prices per timestep. default: None
-        Output:
-        - str: .png file path.
-        """
-        if not avg_prices:
-                avg_prices = self._calculate_avg_prices()
+    
+    
+    """
+    ==========================================
+    Data aggregration and output creation
+    ==========================================
+    """
+    
+    def plot_price(self) -> str:
+        rows = self._build_timestep_rows()
+        if not rows:
+            return str(self.output_path / f"avg_price-{self.run_id}.png")
 
-        timesteps = [state.timestep for state in self.history]
-        valid_timesteps = timesteps[1:]
-        valid_prices = avg_prices[1:]
+        timesteps = [r["timestep"] for r in rows]
+        avg_prices = [r["average_price"] for r in rows]
+
         plot.figure(figsize=(10, 5))
-        plot.plot(valid_timesteps, valid_prices, marker="o")
+        plot.plot(timesteps, avg_prices, marker="o")
         plot.title("Average Price Over Time")
         plot.xlabel("Timestep")
-        plot.ylabel("Price")
-        plot.ylim(min(valid_prices) - 2, max(valid_prices) + 2)
+        plot.ylabel("Average Price")
         plot.grid(True)
-        filename = f"avg_price-{self.run_id}.png"
-        output_dir = self.config.output_path
-        plot.savefig(output_dir / filename)
-        return f"{output_dir}/{filename}"
-        
-    def _calculate_avg_prices(self) -> list[float]:
-        """Returns the average seller price for each timestep."""
-        avg_prices = []
 
-        for t in self.history:
-            if not t.sellers:
-                continue
+        if avg_prices:
+            ymin = min(avg_prices)
+            ymax = max(avg_prices)
+            if ymin != ymax:
+                plot.ylim(ymin - 2, ymax + 2)
 
-            total_price = 0
-            for s in t.sellers:
-                
-                total_price += s.price
+        filepath = self.output_path / f"avg_price-{self.run_id}.png"
+        plot.savefig(filepath, bbox_inches="tight")
+        plot.close()
 
-            avg = total_price / len(t.sellers)
-            avg_prices.append(avg)
-
-        print("\n\n Average Prices: ", avg_prices, "\n\n")
-        return avg_prices
+        return str(filepath)
     
-    def export_history_json(self) -> str:
-        output_dir = self.config.output_path
-        output_dir.mkdir(parents=True, exist_ok=True)
+    def plot_supply_demand(self) -> str:
+        rows = self._build_timestep_rows()
+        if not rows:
+            return str(self.output_path / f"supply_demand-{self.run_id}.png")
 
-        filepath = output_dir / "history.json"
+        timesteps = [r["timestep"] for r in rows]
+        demand = [r["total_demand"] for r in rows]
+        supply_available = [r["total_supply_available"] for r in rows]
+        inventory = [r["total_inventory"] for r in rows]
+
+        plot.figure(figsize=(10, 5))
+        plot.plot(timesteps, demand, marker="o", label="Total Demand")
+        plot.plot(timesteps, supply_available, marker="o", label="Supply Available")
+        plot.plot(timesteps, inventory, marker="o", label="Ending Inventory")
+        plot.title("Supply and Demand Over Time")
+        plot.xlabel("Timestep")
+        plot.ylabel("Units")
+        plot.grid(True)
+        plot.legend()
+
+        filepath = self.output_path / f"supply_demand-{self.run_id}.png"
+        plot.savefig(filepath, bbox_inches="tight")
+        plot.close()
+
+        return str(filepath)
+    
+    def plot_fulfillment(self) -> str:
+        rows = self._build_timestep_rows()
+        if not rows:
+            return str(self.output_path / f"fulfillment-{self.run_id}.png")
+
+        timesteps = [r["timestep"] for r in rows]
+        fulfilled = [r["total_units_sold"] for r in rows]
+        unmet = [r["total_unmet_demand"] for r in rows]
+
+        plot.figure(figsize=(10, 5))
+        plot.plot(timesteps, fulfilled, marker="o", label="Fulfilled Units")
+        plot.plot(timesteps, unmet, marker="o", label="Unmet Demand")
+        plot.title("Demand Fulfillment Over Time")
+        plot.xlabel("Timestep")
+        plot.ylabel("Units")
+        plot.grid(True)
+        plot.legend()
+
+        filepath = self.output_path / f"fulfillment-{self.run_id}.png"
+        plot.savefig(filepath, bbox_inches="tight")
+        plot.close()
+
+        return str(filepath)
+    
+    def export_all_outputs(self) -> dict[str, str]:
+        outputs = {
+            "timesteps_csv": self.export_timesteps_csv(),
+            "sellers_csv": self.export_sellers_csv(),
+            "buyers_csv": self.export_buyers_csv(),
+            "transactions_csv": self.export_transactions_csv(),
+            "price_plot": self.plot_price(),
+            "supply_demand_plot": self.plot_supply_demand(),
+            "fulfillment_plot": self.plot_fulfillment(),
+        }
+        return outputs
+    
+    
+
+    
+    
+    def export_history_json(self) -> str: 
+        filepath = self.output_path / "history.json"
 
         history_payload = []
 
@@ -105,7 +155,6 @@ class Simulation:
                         "id": b.buyer_id,
                         "wtp": b.wtp,
                         "demand": b.initial_demand,
-                        "wtp": b.wtp,
                         "unmet_demand": b.unmet_demand,
                     }
                     for b in state.buyers
@@ -144,3 +193,137 @@ class Simulation:
             json.dump(history_payload, f, indent=2, default=str)
 
         return str(filepath)
+    
+    def export_timesteps_csv(self) -> str:
+        rows = self._build_timestep_rows()
+        return self._write_csv("timesteps.csv", rows)
+    
+    def export_sellers_csv(self) -> str:
+        rows = self._build_seller_rows()
+        return self._write_csv("sellers.csv", rows)
+    
+    def export_buyers_csv(self) -> str:
+        rows = self._build_buyer_rows()
+        return self._write_csv("buyers.csv", rows)
+    
+    def export_transactions_csv(self) -> str:
+        rows = self._build_transaction_rows()
+        return self._write_csv("transactions.csv", rows)
+    
+    
+    """
+    ==========================================
+    Utility and private functions
+    ==========================================
+    """
+    
+    def _build_transaction_rows(self) -> list[dict[str, Any]]:
+        rows = []
+
+        for t in self.history:
+            for tx in t.transactions:
+                rows.append({
+                    "run_id": str(self.run_id),
+                    "timestep": tx.timestep,
+                    "transaction_id": str(tx.id),
+                    "buyer_id": tx.buyer_id,
+                    "seller_id": tx.seller_id,
+                    "units_sold": tx.units_sold,
+                    "unit_price": tx.unit_price,
+                    "total_price": tx.total_price,
+                    "buyer_wtp": tx.buyer_wtp,
+                    "remaining_demand": tx.remaining_demand,
+                })
+
+        return rows    
+    
+    def _build_buyer_rows(self) -> list[dict[str, Any]]:
+        rows = []
+
+        for t in self.history:
+            for b in t.buyers:
+                rows.append({
+                    "run_id": str(self.run_id),
+                    "timestep": t.timestep,
+                    "buyer_id": b.buyer_id,
+                    "wtp": b.wtp,
+                    "initial_demand": b.initial_demand,
+                    "unmet_demand": b.unmet_demand,
+                    "fulfilled_demand": b.initial_demand - b.unmet_demand,
+                    "served": (b.initial_demand - b.unmet_demand) > 0,
+                })
+
+        return rows
+    
+    def _build_seller_rows(self) -> list[dict[str, Any]]:
+        rows = []
+
+        for t in self.history:
+            for s in t.sellers:
+                rows.append({
+                    "run_id": str(self.run_id),
+                    "timestep": t.timestep,
+                    "seller_id": s.seller_id,
+                    "price": s.price,
+                    "inventory": s.inventory,
+                    "prod_rate": s.prod_rate,
+                    "capacity": s.capacity,
+                    "units_sold": s.units_sold,
+                    "utilization": s.utilization,
+                })
+
+        return rows
+    
+    def _build_timestep_rows(self) -> list[dict[str, Any]]:
+        """Takes self.history and creates a dict of timestep attrs (not nested attrs)"""
+        rows = []
+        for t in self.history:
+            row = {
+                "run_id":                   self.run_id,
+                "timestep":                 t.timestep,
+                "total_units_sold":         t.total_units_sold,
+                "total_demand":             t.total_demand,
+                "total_inventory":          t.total_inventory,
+                "total_supply_available":   t.total_supply_available,
+                "min_price":                t.min_price,
+                "max_price":                t.max_price,
+                "shock_active":             t.shock_active,
+                "total_unmet_demand":       t.total_unmet_demand,
+                "average_price":            t.average_price,
+                "transaction_count" :       t.transaction_count,
+            }
+            rows.append(row)
+            
+        return rows
+    
+    def _write_csv(self, filename: str, rows: list[dict[str, Any]]) -> str:
+        filepath = self.output_path / filename
+
+        if not rows:
+            return str(filepath)
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+            writer.writeheader()
+            writer.writerows(rows)
+
+        return str(filepath)
+    
+    def _calculate_avg_prices(self) -> list[float]:
+        """Returns the average seller price for each timestep."""
+        avg_prices = []
+
+        for t in self.history:
+            if not t.sellers:
+                continue
+
+            total_price = 0
+            for s in t.sellers:
+                
+                total_price += s.price
+
+            avg = total_price / len(t.sellers)
+            avg_prices.append(avg)
+
+        print("\n\n Average Prices: ", avg_prices, "\n\n")
+        return avg_prices
