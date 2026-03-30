@@ -1,5 +1,6 @@
 
 
+from dataclasses import dataclass
 from typing import Any, Dict
 
 from experiments import experiment
@@ -8,6 +9,14 @@ from oilmarket.data.simulation import SimulationConfig
 from oilmarket.data.state import TimestepState
 from oilmarket.simulation import Simulation
 
+@dataclass
+class ExectuionResult:
+    success: bool
+    experiment_id: str
+    run_id: str
+    run_path: str
+    is_baseline: bool #shockless
+    error_message: str
 
 class ExperimentExecuter:
     
@@ -21,6 +30,8 @@ class ExperimentExecuter:
             self.experiment = Experiment.from_dict(experiment_json) #experiment needs this function
         else:
             self.experiment = experiment
+            
+        self.is_baseline = is_baseline
             
     def execute(self):
         if not self.experiment:
@@ -49,5 +60,11 @@ class ExperimentExecuter:
         if len(result) == 0:
             raise Exception("There werre no results returned from the simulation run.")
         
-        
+        return ExectuionResult(
+            success=True,
+            experiment_id=self.experiment.id,
+            run_id=sim.run_id,
+            run_path=sim.output_path,
+            is_baseline=self.is_baseline,
+        )
         
