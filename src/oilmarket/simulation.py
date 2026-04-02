@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import csv
+import datetime
 from typing import Any
 import uuid
 import json
 from pathlib import Path
+from experiments.experiment import Experiment
 from oilmarket.data.state import TimestepState
 from oilmarket.market import Market
 from oilmarket.shocks.shocks import Shock
@@ -16,6 +18,9 @@ class Simulation:
     def __init__(
         self,
         config: SimulationConfig,
+        do_shock: bool,
+        run_type: str,
+        experiment: Experiment,
     ):
         self.config = config
         self.market = Market(config=config)
@@ -24,13 +29,19 @@ class Simulation:
         self.output_path = Path(self.config.output_path) / f"run-{self.run_id}"
         self.output_path.mkdir(parents=True, exist_ok=True)
         
+        self.do_shock = do_shock
+        self.run_type = run_type
+        self.status = "Started"
+        
+        if experiment: self.experiment = experiment
+        else: self.experiment = None #not the best handling of this case
     
     def run(self) -> list[TimestepState]:
-        """Coor descrete time simulation loop.
+        """Core descrete time simulation loop.
         Each tick executes the conceptual 'activity diagram' steps in order.
 
         """
-        
+        self.status = "running"
         for t in range(self.config.ticks):
             #determine whetther shock is active this tick
             tick_result = self.market.run_market_timestep(t)
@@ -39,6 +50,7 @@ class Simulation:
                 tick_result
             )
             
+        self.status = "complete"
         return self.history
     
     
@@ -135,12 +147,27 @@ class Simulation:
             "price_plot": self.plot_price(),
             "supply_demand_plot": self.plot_supply_demand(),
             "fulfillment_plot": self.plot_fulfillment(),
+            "manifest": self.export_manifest_json(),
         }
         return outputs
     
     
 
-    
+    def export_manifest_json(self) -> dict:
+        filepath = self.output_path / "manifest.json"
+        
+        manifest = {
+            "run_id": self.run_id,
+            "experiment_id": self.experiment.id if self.experiment else "",
+            "run_type": self.run_type,
+            "shock_enabled": self.do_shock,
+            "created_at": datetime.datetime.now().today(), #to string!
+            "status": self.status,
+        }
+        
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(manifest, f, indent=2, default=str)
+        return str(filepath)
     
     def export_history_json(self) -> str: 
         filepath = self.output_path / "history.json"

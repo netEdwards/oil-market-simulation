@@ -10,6 +10,7 @@ from PySide6.QtCore import QSize, Qt
 
 from app.screens.new_experiment import NewExperimentScreen
 from app.screens.view_experiments import ViewExperimentsScreen
+from app.screens.experiment_viewer import ExperimentViewerScreen
 
 
 class MainWindow(QMainWindow):
@@ -31,6 +32,10 @@ class MainWindow(QMainWindow):
             on_cancel=self.show_home_screen,
             on_saved=self.show_home_screen,
         )
+        self.experiment_view_page = ExperimentViewerScreen(
+            on_back=self.show_view_experiments_screen,
+            on_run=self._on_run_experiment_requested,
+        )
 
         self.view_experiments_page = ViewExperimentsScreen(
             on_back=self.show_home_screen,
@@ -41,6 +46,7 @@ class MainWindow(QMainWindow):
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.new_experiment_page)
         self.stack.addWidget(self.view_experiments_page)
+        self.stack.addWidget(self.experiment_view_page)
 
         self.setCentralWidget(self.stack)
 
@@ -103,6 +109,12 @@ class MainWindow(QMainWindow):
     def show_view_experiments_screen(self):
         self.view_experiments_page.refresh()
         self.stack.setCurrentWidget(self.view_experiments_page)
+        
+    def show_new_experiment_screen(self):
+        self.stack.setCurrentWidget(self.new_experiment_page)
+        
+    def show_experiment_viewer(self):
+        self.stack.setCurrentWidget(self.experiment_view_page)
 
     def _on_new_experiment_button_clicked(self):
         self.show_new_experiment_screen()
@@ -111,7 +123,7 @@ class MainWindow(QMainWindow):
         self.show_view_experiments_screen()
         
     def _on_view_experiment_requested(self, experiment: dict):
-        print(f'View requested for: {experiment.get("name")}')
+        self.show_experiment_viewer()
 
     def _on_edit_experiment_requested(self, experiment: dict):
         print(f'Edit requested for: {experiment.get("name")}')
@@ -121,3 +133,6 @@ class MainWindow(QMainWindow):
 
     def _on_exit_button_clicked(self):
         self.close()
+        
+    def _on_run_experiment_requested(self, experiment: dict) -> None:
+        print(f'Experiment Running screen no yet implemented. Running experiment {experiment.get("name")}')

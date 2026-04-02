@@ -15,14 +15,15 @@ class ExectuionResult:
     experiment_id: str
     run_id: str
     run_path: str
-    is_baseline: bool #shockless
+    run_type: str #shockless
+    shock_enabled: bool
     error_message: str
 
 class ExperimentExecuter:
     
     def __init__(
         self,
-        is_baseline: bool = False,
+        run_type: str = "",
         experiment: Experiment = None,
         experiment_json: Dict[str, Any] = None,
     ):
@@ -31,7 +32,7 @@ class ExperimentExecuter:
         else:
             self.experiment = experiment
             
-        self.is_baseline = is_baseline
+        self.run_type = run_type    
             
     def execute(self):
         if not self.experiment:
@@ -53,7 +54,11 @@ class ExperimentExecuter:
                 if not config:
                     raise Exception("There is no configuration loadable from the experiment.")
                 
-        sim = Simulation(config)
+                
+        if self.run_type == "baseline": do_shock = False
+        else: do_shock = True
+                
+        sim = Simulation(config, do_shock, self.run_type)
         result = sim.run()
         if not isinstance(result, list[TimestepState]):
             raise Exception("There was an error with the output of simulation state.")
@@ -65,6 +70,7 @@ class ExperimentExecuter:
             experiment_id=self.experiment.id,
             run_id=sim.run_id,
             run_path=sim.output_path,
-            is_baseline=self.is_baseline,
+            run_type=self.run_type,
+            shock_enabled=do_shock,
         )
         
