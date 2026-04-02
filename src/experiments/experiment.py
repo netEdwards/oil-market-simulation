@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from logging import config
+from os import name
 import re
 import uuid
 from dataclasses import dataclass, field
@@ -8,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, ClassVar
 
+from matplotlib.inset import InsetIndicator
 import yaml
 
 
@@ -39,7 +42,7 @@ class Experiment:
 
     name: str
     description: str
-    config_data: dict[str, Any]
+    config_data: dict[str, Any] | None
 
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     created_at: str = field(
@@ -82,19 +85,25 @@ class Experiment:
     @property
     def config_path(self) -> Path:
         return self.folder_path / self.CONFIG_FILENAME
+    
+    @property
+    def output_path(self) -> Path:
+        return self.folder_path / "runs"
 
     def to_dict(self) -> dict[str, Any]:
         """
         Metadata only. Intentionally excludes config_data.
         """
         return {
-            "id": self.id,
-            "name": self.name,
-            "slug": self.slug,
-            "folder_name": self.folder_name,
-            "description": self.description,
-            "created_at": self.created_at,
-            "config_file": self.CONFIG_FILENAME,
+            "id":           self.id,
+            "name":         self.name,
+            "slug":         self.slug,
+            "folder_name":  self.folder_name,
+            "description":  self.description,
+            "created_at":   self.created_at,
+            "config_file":  self.CONFIG_FILENAME,
+            "output_path":  str(self.output_path),
+            "folder_path":  str(self.folder_path)
         }
 
     def save(self) -> Path:
@@ -118,6 +127,8 @@ class Experiment:
             )
 
         return self.folder_path
+
+
 
     @classmethod
     def load(cls, folder_path: Path | str) -> "Experiment":
@@ -149,6 +160,8 @@ class Experiment:
             id=metadata["id"],
             created_at=metadata["created_at"],
         )
+        
+        print(f'Experiment loaded successfully: {experiment.name}')
 
         return experiment
 

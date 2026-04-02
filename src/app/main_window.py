@@ -6,12 +6,15 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStackedWidget,
 )
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QThread
 
 from app.screens.new_experiment import NewExperimentScreen
 from app.screens.view_experiments import ViewExperimentsScreen
 from app.screens.experiment_viewer import ExperimentViewerScreen
 from app.screens.experiment_running import ExperimentRunnningScreen
+from app.experiment_runner_controller import ExecutionWorker
+from experiments.experiment_executer import ExecutionResult
+from app.screens.experiment_results import ExperimentResultsScreen
 
 
 class MainWindow(QMainWindow):
@@ -48,13 +51,19 @@ class MainWindow(QMainWindow):
             on_back=self.show_experiment_viewer,
         )
         
+        self.experiment_results_page = ExperimentResultsScreen(
+            on_back     = self.show_view_experiments_screen,
+            experiment  = None
+        )
+        
         
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.new_experiment_page)
         self.stack.addWidget(self.view_experiments_page)
         self.stack.addWidget(self.experiment_view_page)
         self.stack.addWidget(self.experiment_running_page)
-
+        self.stack.addWidget(self.experiment_results_page)
+    
         self.setCentralWidget(self.stack)
 
     def _build_home_screen(self) -> QWidget:
@@ -83,17 +92,15 @@ class MainWindow(QMainWindow):
 
         self.new_experiment_button.setMinimumHeight(40)
         self.view_experiments_button.setMinimumHeight(40)
-        self.new_baseline_button.setMinimumHeight(40)
         self.exit_button.setMinimumHeight(40)
 
         menu_layout.addWidget(title_label)
         menu_layout.addWidget(self.new_experiment_button)
         menu_layout.addWidget(self.view_experiments_button)
-        menu_layout.addWidget(self.new_baseline_button)
         menu_layout.addWidget(self.exit_button)
 
         outer_layout.addStretch()
-        outer_layout.addWidget(menu_container, alignment=Qt.AlignCenter)
+        outer_layout.addWidget(menu_container, alignment=Qt.AlignmentFlag.AlignCenter)
         outer_layout.addStretch()
 
         return page
@@ -124,6 +131,9 @@ class MainWindow(QMainWindow):
         self.experiment_view_page.set_experiment(experiment)
         self.stack.setCurrentWidget(self.experiment_view_page)
         
+    def show_experiment_results_page(self, experiment: dict) -> None:
+        self.stack.setCurrentWidget(self.experiment_results_page)
+        self.experiment_results_page.set_experiment(experiment)
         
     def show_experiment_running_screen(self):
         self.stack.setCurrentWidget(self.experiment_running_page)
@@ -142,15 +152,46 @@ class MainWindow(QMainWindow):
     def _on_edit_experiment_requested(self, experiment: dict):
         print(f'Edit requested for: {experiment.get("name")}')
 
-    def _on_new_baseline_button_clicked(self):
-        print("New Baseline screen not implemented yet.")
-
     def _on_exit_button_clicked(self):
         self.close()
         
     def _on_run_experiment_requested(self, experiment: dict) -> None:
-        ...
-        """
-        Threading, and stuff.
-        """
+        self.stack.setCurrentWidget(self.experiment_running_page)
+        self._execute_experiment(experiment)
+        
+    def _on_progress_emitted(self, progress: int) -> None:
+        self.experiment_running_page.set_percent_progress(progress)
+    
+    def _on_finished_emitted(self, experiment_result: ExecutionResult) -> None:
+        self.experiment_running_page.set_complete_state()
+        self.execution_thread.quit()
+        self.execution_thread.wait()
+        self.execution_thread = None
+        self.execution_worker = None
+    
+    def _on_failed_emitted(self, error: str) -> None:
+        self.experiment_running_page.set_failed_state()
+        print("Emitted Error: ", error)
+         
+    def _execute_experiment(self, experiment: dict) -> None:
+        
+        if not experiment:
+            return
+        
+        worker = ExecutionWorker(experiment)
+        thread = QThread()
+        worker.moveToThread(thread)
+        thread.started.connect(worker.run)
+        
+        self.execution_worker = worker
+        self.execution_thread = thread
+        
+        worker.progress.connect(self._on_progress_emitted)
+        worker.finished.connect(self._on_finished_emitted)
+        worker.failed.connect(self._on_failed_emitted)
+        
+        thread.start()
+        
+    def _on_view_results_clicked(self, experiment: dict) -> None:
+        self.show_experiment_results_page(experiment)
         

@@ -18,9 +18,8 @@ class Simulation:
     def __init__(
         self,
         config: SimulationConfig,
-        do_shock: bool,
-        run_type: str,
-        experiment: Experiment,
+        do_shock: bool = True,
+        experiment: Experiment = None,
     ):
         self.config = config
         self.market = Market(config=config)
@@ -30,7 +29,7 @@ class Simulation:
         self.output_path.mkdir(parents=True, exist_ok=True)
         
         self.do_shock = do_shock
-        self.run_type = run_type
+        self.run_type = "shock" if do_shock else "shockless"
         self.status = "Started"
         
         if experiment: self.experiment = experiment
@@ -51,6 +50,7 @@ class Simulation:
             )
             
         self.status = "complete"
+        
         return self.history
     
     

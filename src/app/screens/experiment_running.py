@@ -24,10 +24,10 @@ class ExperimentRunnningScreen(QWidget):
         self.experiment: dict | None = None
         
         self._build_ui()
-        self._connect_signals
+        self._connect_signals()
         
     def _build_ui(self) -> None:
-        root = QVBoxLayout()
+        root = QVBoxLayout(self)
         root.setContentsMargins(24, 24, 24, 24)
         root.setSpacing(16)
         
@@ -54,6 +54,10 @@ class ExperimentRunnningScreen(QWidget):
         status_font.setBold(True)
         self.status_label.setFont(status_font)
         
+        self.phase_label = QLabel("Phase: ")
+        
+        self.tick_progress_label = QLabel("Tick: ")
+        
         self.progress_bar = QProgressBar()
         # 0,0 puts progress ar into "busy" mode
         self.progress_bar.setRange(0, 0)
@@ -64,6 +68,8 @@ class ExperimentRunnningScreen(QWidget):
         details_layout.addSpacing(8)
         details_layout.addWidget(self.status_label)
         details_layout.addWidget(self.progress_bar)
+        details_layout.addWidget(self.phase_label)
+        details_layout.addWidget(self.tick_progress_label)
         
         root.addWidget(self.details_card)
         
@@ -104,7 +110,17 @@ class ExperimentRunnningScreen(QWidget):
     def set_running_state(self) -> None:
         self.set_status("Running...")
         self.progress_bar.setVisible(True)
+        self.progress_bar.setRange(0, 100)
         self.back_button.setEnabled(False)
+        
+    def set_tick_progress(self, current_tick: int, total_ticks: int):
+        ...
+        
+    def set_phase(self, text):
+        ...
+        
+    def set_percent_progress(self, percent):
+        self.progress_bar.setValue(percent) #not proper use?
         
     def set_complete_state(self) -> None:
         self.set_status("complete")
@@ -121,4 +137,4 @@ class ExperimentRunnningScreen(QWidget):
 
     def _handle_back(self) -> None:
         if self.on_back:
-            self.on_back()
+            self.on_back(self.experiment)
