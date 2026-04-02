@@ -11,6 +11,7 @@ from PySide6.QtCore import QSize, Qt
 from app.screens.new_experiment import NewExperimentScreen
 from app.screens.view_experiments import ViewExperimentsScreen
 from app.screens.experiment_viewer import ExperimentViewerScreen
+from app.screens.experiment_running import ExperimentRunnningScreen
 
 
 class MainWindow(QMainWindow):
@@ -43,10 +44,16 @@ class MainWindow(QMainWindow):
             on_edit=self._on_edit_experiment_requested,
         )
         
+        self.experiment_running_page = ExperimentRunnningScreen(
+            on_back=self.show_experiment_viewer,
+        )
+        
+        
         self.stack.addWidget(self.home_page)
         self.stack.addWidget(self.new_experiment_page)
         self.stack.addWidget(self.view_experiments_page)
         self.stack.addWidget(self.experiment_view_page)
+        self.stack.addWidget(self.experiment_running_page)
 
         self.setCentralWidget(self.stack)
 
@@ -113,8 +120,13 @@ class MainWindow(QMainWindow):
     def show_new_experiment_screen(self):
         self.stack.setCurrentWidget(self.new_experiment_page)
         
-    def show_experiment_viewer(self):
+    def show_experiment_viewer(self, experiment: dict):
+        self.experiment_view_page.set_experiment(experiment)
         self.stack.setCurrentWidget(self.experiment_view_page)
+        
+        
+    def show_experiment_running_screen(self):
+        self.stack.setCurrentWidget(self.experiment_running_page)
 
     def _on_new_experiment_button_clicked(self):
         self.show_new_experiment_screen()
@@ -123,7 +135,9 @@ class MainWindow(QMainWindow):
         self.show_view_experiments_screen()
         
     def _on_view_experiment_requested(self, experiment: dict):
-        self.show_experiment_viewer()
+        if not experiment:
+            print("No experiment passed...")
+        self.show_experiment_viewer(experiment)
 
     def _on_edit_experiment_requested(self, experiment: dict):
         print(f'Edit requested for: {experiment.get("name")}')
@@ -135,4 +149,8 @@ class MainWindow(QMainWindow):
         self.close()
         
     def _on_run_experiment_requested(self, experiment: dict) -> None:
-        print(f'Experiment Running screen no yet implemented. Running experiment {experiment.get("name")}')
+        ...
+        """
+        Threading, and stuff.
+        """
+        

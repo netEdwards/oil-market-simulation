@@ -381,4 +381,4 @@ class NewExperimentScreen(QWidget):
         QMessageBox.information(self, "Saved", f'Experiment "{name}" was created successfully.')
 
         if self.on_saved:
-            self.on_saved(experiment)
+            self.on_saved()

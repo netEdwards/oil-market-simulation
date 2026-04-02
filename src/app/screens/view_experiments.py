@@ -47,7 +47,7 @@ class ViewExperimentsScreen(QWidget):
         title_font.setPointSize(18)
         title_font.setBold(True)
         title.setFont(title_font)
-        title.setAlignment(Qt.AlignCenter)
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(title)
 
         self.scroll = QScrollArea()
@@ -129,6 +129,8 @@ class ViewExperimentsScreen(QWidget):
         return results
 
     def _build_experiment_card(self, experiment: dict) -> QWidget:
+        if not experiment:
+            print("No experiment in the card builder..")
         card = QFrame()
         card.setFrameShape(QFrame.Shape.StyledPanel)
         card.setFrameShadow(QFrame.Shadow.Raised)
@@ -174,6 +176,8 @@ class ViewExperimentsScreen(QWidget):
             self.on_back()
 
     def _handle_view(self, experiment: dict) -> None:
+        if not experiment:
+            print("There is no experiment loaded.")
         if self.on_view:
             self.on_view(experiment)
             return

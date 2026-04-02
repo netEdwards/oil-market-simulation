@@ -24,25 +24,28 @@ class ExperimentViewerScreen(QWidget):
         self.on_run = on_run
         self.experiment: dict | None = None
         
-        self.name_lable = QLabel("")
-        self.description_lable = QLabel("")
+        self.name_label = QLabel("")
+        self.description_label = QLabel("")
         
         self._build_ui()
-        
-    def set_experiment(self, experiment: dict) -> None:
-        self.experiment = experiment
-        self._populate()
+        self._connect_signals()
         
     def _populate(self) -> None:
         if not self.experiment:
             return
         
-        self.name_label.setText(self.experiment.get("name", "Unamed Expeirment"))
-        self.description(self.experiment.get("description", "No description."))
+        self.name_label.setText(
+            f'Name: {self.experiment.get("name", "Unamed Exeriment")}'
+        )
+        
+        description = self.experiment.get("description", "No Description Provided.")
+        self.description_label.setText(
+            f'Description: {description or "No Description Provided."}'
+        )
 
     def _build_ui(self) -> None:
-        
-        root_layout = QVBoxLayout()
+        print("Building Experiment Viewer Screen")
+        root_layout = QVBoxLayout(self)
         root_layout.setContentsMargins(24, 24, 24, 24)
         root_layout.setSpacing(16)
         self.title = QLabel("Experiment Viewer")
@@ -85,23 +88,18 @@ class ExperimentViewerScreen(QWidget):
         
         
     def _connect_signals(self)-> None:
-        self.back_button.clicked.connect(self._handle_back())
-        self.run_button.clicked.connect(self._handle_run())
+        self.back_button.clicked.connect(self._handle_back)
+        self.run_button.clicked.connect(self._handle_run)
         
     def set_experiment(self, experiment: dict) -> None:
+        self.experiment = experiment
         if not self.experiment:
+            print("No experiment passed.")
             self.name_label.setText("Name: ")
             self.description_label.setText("Description: ")
             return
             
-        self.name_label.setText(
-            f'Name: {self.experiment.get("name", "Unamed Exeriment")}'
-        )
-        
-        description = self.experiment.get("description", "No Description Provided.")
-        self.description_label.setText(
-            f'Description: {description or "No Description Provided."}'
-        )
+        self._populate()
         
     def _handle_back(self) -> None:
         if self.on_back:
