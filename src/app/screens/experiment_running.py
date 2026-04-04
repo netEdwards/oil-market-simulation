@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 class ExperimentRunnningScreen(QWidget):
     def __init__(
         self,
-        on_back: Callable[[], None] | None = None,
+        on_back: Callable[[dict], None] | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__()

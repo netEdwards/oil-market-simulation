@@ -64,7 +64,7 @@ class SimulationConfig:
     sellers: SellerConfig
     output_path: str = Path(__file__).parent.parent.parent.parent / "runs"
     
-    #ADD POST INIT?
+    
     
     @classmethod
     def from_yaml(cls, path: str | Path) -> "SimulationConfig":

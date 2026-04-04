@@ -69,7 +69,7 @@ class Market:
         seed        = self.config.seed
         self.rng    = np.random.default_rng(seed=seed)
         self.shock = Shock(config=config)
-        self.shock_active = False
+        self.shock_active = do_shock
         
         
         
@@ -94,7 +94,7 @@ class Market:
         
         """
         # Apply shock if applicable
-        if self.shock.is_active(timestep):
+        if self.shock.is_active(timestep) and self.shock_active:
                 self.shock.apply_shock(sellers=self.sellers, timestep=timestep)
                 self.shock_active = True
                 

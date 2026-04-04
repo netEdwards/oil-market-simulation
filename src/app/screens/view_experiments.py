@@ -4,6 +4,7 @@ import json
 import shutil
 from pathlib import Path
 from typing import Callable
+from unittest import result
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -25,14 +26,16 @@ class ViewExperimentsScreen(QWidget):
         self,
         on_back: Callable[[], None] | None = None,
         on_view: Callable[[dict], None] | None = None,
+        on_results: Callable[[dict], None] | None = None,
         on_edit: Callable[[dict], None] | None = None,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
 
-        self.on_back = on_back
-        self.on_view = on_view
-        self.on_edit = on_edit
+        self.on_back    = on_back
+        self.on_view    = on_view
+        self.on_edit    = on_edit
+        self.on_results = on_results
 
         self._build_ui()
         self.refresh()
@@ -155,14 +158,17 @@ class ViewExperimentsScreen(QWidget):
         action_row = QHBoxLayout()
         action_row.addStretch()
 
-        view_button = QPushButton("View")
-        edit_button = QPushButton("Edit")
-        delete_button = QPushButton("Delete")
-
+        results_button  = QPushButton("Results")
+        view_button     = QPushButton("View")
+        edit_button     = QPushButton("Edit")
+        delete_button   = QPushButton("Delete")
+        
+        results_button.clicked.connect(lambda: self._handle_results(experiment))
         view_button.clicked.connect(lambda: self._handle_view(experiment))
         edit_button.clicked.connect(lambda: self._handle_edit(experiment))
         delete_button.clicked.connect(lambda: self._handle_delete(experiment))
 
+        action_row.addWidget(results_button)
         action_row.addWidget(view_button)
         action_row.addWidget(edit_button)
         action_row.addWidget(delete_button)
@@ -171,9 +177,18 @@ class ViewExperimentsScreen(QWidget):
 
         return card
 
+    def _handle_results(self, experiment: dict) -> None:
+        if self.on_results and experiment:
+            self.on_results(experiment)
+            return
+        else:
+            print("Missing a return callable or experiment", self.on_results)
+            return
+
     def _handle_back(self) -> None:
         if self.on_back:
             self.on_back()
+            return
 
     def _handle_view(self, experiment: dict) -> None:
         if not experiment:
@@ -182,22 +197,10 @@ class ViewExperimentsScreen(QWidget):
             self.on_view(experiment)
             return
 
-        QMessageBox.information(
-            self,
-            "Not Implemented",
-            f'View is not implemented yet for "{experiment.get("name", "Experiment")}".',
-        )
-
     def _handle_edit(self, experiment: dict) -> None:
         if self.on_edit:
             self.on_edit(experiment)
             return
-
-        QMessageBox.information(
-            self,
-            "Not Implemented",
-            f'Edit is not implemented yet for "{experiment.get("name", "Experiment")}".',
-        )
 
     def _handle_delete(self, experiment: dict) -> None:
         experiment_name = experiment.get("name", "Experiment")

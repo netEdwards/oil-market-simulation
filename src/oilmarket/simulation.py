@@ -21,14 +21,15 @@ class Simulation:
         do_shock: bool = True,
         experiment: Experiment = None,
     ):
+        self.do_shock = do_shock
         self.config = config
-        self.market = Market(config=config)
+        self.market = Market(config=config, do_shock=self.do_shock)
         self.history: list[TimestepState] = []
         self.run_id = uuid.uuid4()
         self.output_path = Path(self.config.output_path) / f"run-{self.run_id}"
         self.output_path.mkdir(parents=True, exist_ok=True)
         
-        self.do_shock = do_shock
+        
         self.run_type = "shock" if do_shock else "shockless"
         self.status = "Started"
         
@@ -64,7 +65,7 @@ class Simulation:
     def plot_price(self) -> str:
         rows = self._build_timestep_rows()
         if not rows:
-            return str(self.output_path / f"avg_price-{self.run_id}.png")
+            return str(self.output_path / f"avg_price.png")
 
         timesteps = [r["timestep"] for r in rows]
         avg_prices = [r["average_price"] for r in rows]
@@ -82,7 +83,7 @@ class Simulation:
             if ymin != ymax:
                 plot.ylim(ymin - 2, ymax + 2)
 
-        filepath = self.output_path / f"avg_price-{self.run_id}.png"
+        filepath = self.output_path / f"avg_price.png"
         plot.savefig(filepath, bbox_inches="tight")
         plot.close()
 
@@ -91,7 +92,7 @@ class Simulation:
     def plot_supply_demand(self) -> str:
         rows = self._build_timestep_rows()
         if not rows:
-            return str(self.output_path / f"supply_demand-{self.run_id}.png")
+            return str(self.output_path / f"supply_demand.png")
 
         timesteps = [r["timestep"] for r in rows]
         demand = [r["total_demand"] for r in rows]
@@ -108,7 +109,7 @@ class Simulation:
         plot.grid(True)
         plot.legend()
 
-        filepath = self.output_path / f"supply_demand-{self.run_id}.png"
+        filepath = self.output_path / f"supply_demand.png"
         plot.savefig(filepath, bbox_inches="tight")
         plot.close()
 
@@ -117,7 +118,7 @@ class Simulation:
     def plot_fulfillment(self) -> str:
         rows = self._build_timestep_rows()
         if not rows:
-            return str(self.output_path / f"fulfillment-{self.run_id}.png")
+            return str(self.output_path / f"fulfillment.png")
 
         timesteps = [r["timestep"] for r in rows]
         fulfilled = [r["total_units_sold"] for r in rows]
@@ -132,7 +133,7 @@ class Simulation:
         plot.grid(True)
         plot.legend()
 
-        filepath = self.output_path / f"fulfillment-{self.run_id}.png"
+        filepath = self.output_path / f"fulfillment.png"
         plot.savefig(filepath, bbox_inches="tight")
         plot.close()
 
@@ -140,6 +141,7 @@ class Simulation:
     
     def export_all_outputs(self) -> dict[str, str]:
         outputs = {
+            "history": self.export_history_json(),
             "timesteps_csv": self.export_timesteps_csv(),
             "sellers_csv": self.export_sellers_csv(),
             "buyers_csv": self.export_buyers_csv(),
@@ -157,6 +159,7 @@ class Simulation:
         filepath = self.output_path / "manifest.json"
         
         manifest = {
+            "run_output_path": str(self.output_path),
             "run_id": self.run_id,
             "experiment_id": self.experiment.id if self.experiment else "",
             "run_type": self.run_type,

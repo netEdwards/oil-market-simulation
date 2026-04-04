@@ -1,3 +1,4 @@
+from ast import alias
 from re import S
 from typing import Callable
 
@@ -7,9 +8,12 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QFrame,
     QLabel,
+    QScrollArea,
+    QPushButton,
 )
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPicture, QPixmap
 
 
 class ExperimentResultsScreen(QWidget):
@@ -21,42 +25,138 @@ class ExperimentResultsScreen(QWidget):
         super().__init__()
         
         self.experiment = experiment
+        self.on_back = on_back
         
-        self._build_ui()
+        self.outer_layout = QVBoxLayout(self)
+        
+        
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        
+        self.content = QWidget()
+        self.content_layout = QVBoxLayout(self.content)
+        self.content_layout.setSpacing(16)
+        
+        self.scroll_area.setWidget(self.content)
+        
+        self.outer_layout.addWidget(self.scroll_area)
+        
+        self._build_header()
+        self._build_graph_card()
         self._connect_signals()
         
-    def _build_ui(self) -> None:
+    def _build_header(self) -> None:
         
-        root = QVBoxLayout(self)
-        root.setContentsMargins(24, 24, 24, 24)
-        root.setSpacing(16)
+        root = QWidget()
+        root_layout = QVBoxLayout(root)
+        root_layout.setContentsMargins(24, 24, 24, 24)
+        root_layout.setSpacing(16)
         
         self.title_label = QLabel("Experiment Results")
         title_font = self.title_label.font()
         title_font.setBold(True)
         title_font.setPointSize(18)
         self.title_label.setFont(title_font)
-        root.addWidget(self.title_label)
         
+        self.back_button = QPushButton("Back")
+        
+        root_layout.addWidget(self.back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        root_layout.addWidget(self.title_label)
+        
+        self.cards = QWidget()
+        self.cards_layout = QVBoxLayout(self.cards)
         self.details_card = QFrame()
         self.details_card.setFrameShape(QFrame.Shape.StyledPanel)
-        details_layout = QHBoxLayout()
+        details_layout = QVBoxLayout(self.details_card)
         details_layout.setContentsMargins(16, 16, 16, 16)
         details_layout.setSpacing(16)
         
         self.name_label = QLabel("Name: ")
+        name_label_font = self.name_label.font()
+        name_label_font.setBold(True)
+        self.name_label.setFont(name_label_font)
+        
         self.descritption_label = QLabel("Description: ")
         self.descritption_label.setWordWrap(True)
         
-        details_layout.addWidget(self.name_label)
-        details_layout.addWidget(self.descritption_label)
-        root.addWidget(self.details_card)
+        
+        
+        self.cards_layout.addWidget(self.name_label)
+        self.cards_layout.addWidget(self.descritption_label)
+        
+        
+        
+        self.config_sum = QFrame()
+        self.config_sum.setFrameShape(QFrame.Shape.StyledPanel)
+        self.config_sum_layout = QVBoxLayout(self.config_sum)
+        self.config_sum_layout.setContentsMargins(12, 12, 12, 12)
+        self.config_sum_layout.setSpacing(12)
+        self.config_name_label = QLabel("Config Name: ")
+        self.ticks_label = QLabel("Ticks: ")
+        self.num_buyers_label = QLabel("Number of Buyers: ")
+        self.num_sellers_label = QLabel("Number of Sellers: ")
+        
+        self.config_sum_layout.addWidget(self.config_name_label)
+        self.config_sum_layout.addWidget(self.ticks_label)
+        self.config_sum_layout.addWidget(self.num_buyers_label)
+        self.config_sum_layout.addWidget(self.num_sellers_label)
+        
+        self.cards_layout.addWidget(self.config_sum)
+        
+        #self.cards.setLayout(self.cards_layout)
+        root_layout.addWidget(self.cards)
+        root_layout.addStretch()
+        
+        root.setLayout(root_layout)
+        self.content_layout.addWidget(root)
+        
+    def _build_graph_card(self) -> None:
+        root = QFrame()
+        root.setFrameShape(QFrame.Shape.StyledPanel)
+        root_layout = QVBoxLayout(root)
+        path = "../../../experiments/exp-c7521630-building-multi-run/runs/run-208abe2f-ef54-441e-a022-660b7713e47e/avg_price-208abe2f-ef54-441e-a022-660b7713e47e.png"
+        pic = QPixmap()
+        
+        print("loaded?", not pic.isNull(), path)
+        print("size:", pic.size())
+        
+        pic_label = QLabel()
+        test_label = QLabel("test")
+        pic_label.setPixmap(pic)
+        
+        root_layout.addWidget(pic_label)
+        root_layout.addWidget(test_label)
+        root.resize(pic.height(), pic.width())
+        self.content_layout.addWidget(root)
+        
+        
         
         
         
     def _connect_signals(self) -> None:
-        ...
+        self.back_button.clicked.connect(lambda: self._handle_back())
         
+    def _populate_details(self)-> None:
+        if not self.experiment:
+            return
+
+        self.name_label.setText(f'Name: {self.experiment.get("name", "Unnamed Experiment")}')
+        description = self.experiment.get("description", "No Description").strip()
+        self.descritption_label.setText(f'Description: {description or ""}')
+    
     def set_experiment(self, experiment: dict) -> None:
-        
         self.experiment = experiment if experiment else None
+        self._populate_details()
+        self._create_experiment_vars()
+        
+    def _create_experiment_vars(self) -> None:
+        if not self.experiment:
+            return
+        
+        print(self.experiment)
+        
+        
+        
+    def _handle_back(self) -> None:
+        if self.on_back:
+            self.on_back()

@@ -14,8 +14,8 @@ from oilmarket.simulation import Simulation
 class ExecutionResult:
     success: bool
     experiment_id: str
-    run_ids: str
-    run_path: str
+    shocked_results: dict
+    shockless_results: dict
 
 class ExperimentExecuter:
     
@@ -59,18 +59,20 @@ class ExperimentExecuter:
         #==========================
                 
         shocked_sim = Simulation(config, do_shock=True, experiment=self.experiment)
-        shocked_result = shocked_sim.run()
-        shocked_sim.export_all_outputs()
+        shocked_sim.run()
+        shocked_ouputs = shocked_sim.export_all_outputs()
         
         
         shockless_sim = Simulation(config, do_shock=False, experiment=self.experiment)
-        shockless_result = shockless_sim.run()
-        shocked_sim.export_all_outputs()
+        shockless_sim.run()
+        shockless_outputs = shockless_sim.export_all_outputs()
         
         
         
         return ExecutionResult(
             success=True,
             experiment_id=self.experiment.id,
+            shocked_results=shocked_ouputs,
+            shockless_results=shockless_outputs,
         )
         

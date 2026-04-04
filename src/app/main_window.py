@@ -1,3 +1,5 @@
+from math import exp
+
 from PySide6.QtWidgets import (
     QMainWindow,
     QLabel,
@@ -45,6 +47,7 @@ class MainWindow(QMainWindow):
             on_back=self.show_home_screen,
             on_view=self._on_view_experiment_requested,
             on_edit=self._on_edit_experiment_requested,
+            on_results=self._on_view_results_clicked,
         )
         
         self.experiment_running_page = ExperimentRunnningScreen(
@@ -78,7 +81,7 @@ class MainWindow(QMainWindow):
         menu_container.setLayout(menu_layout)
 
         title_label = QLabel("Market Experiments")
-        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         font = title_label.font()
         font.setPointSize(20)
@@ -112,9 +115,7 @@ class MainWindow(QMainWindow):
         self.view_experiments_button.clicked.connect(
             self._on_view_experiments_button_clicked
         )
-        self.new_baseline_button.clicked.connect(
-            self._on_new_baseline_button_clicked
-        )
+        
         self.exit_button.clicked.connect(self._on_exit_button_clicked)
 
     def show_home_screen(self):
@@ -128,6 +129,7 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.new_experiment_page)
         
     def show_experiment_viewer(self, experiment: dict):
+        print(f"Main window experiment button handler: {experiment}")
         self.experiment_view_page.set_experiment(experiment)
         self.stack.setCurrentWidget(self.experiment_view_page)
         
@@ -152,11 +154,15 @@ class MainWindow(QMainWindow):
     def _on_edit_experiment_requested(self, experiment: dict):
         print(f'Edit requested for: {experiment.get("name")}')
 
+    def _on_view_results_clicked(self, experiment: dict) -> None:
+        self.show_experiment_results_page(experiment)
+
     def _on_exit_button_clicked(self):
         self.close()
         
     def _on_run_experiment_requested(self, experiment: dict) -> None:
         self.stack.setCurrentWidget(self.experiment_running_page)
+        self.experiment_running_page.set_experiment(experiment)
         self._execute_experiment(experiment)
         
     def _on_progress_emitted(self, progress: int) -> None:
@@ -192,6 +198,5 @@ class MainWindow(QMainWindow):
         
         thread.start()
         
-    def _on_view_results_clicked(self, experiment: dict) -> None:
-        self.show_experiment_results_page(experiment)
+    
         
