@@ -164,7 +164,7 @@ class Simulation:
             "experiment_id": self.experiment.id if self.experiment else "",
             "run_type": self.run_type,
             "shock_enabled": self.do_shock,
-            "created_at": datetime.datetime.now().today(), #to string!
+            "created_at": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), #to string!
             "status": self.status,
         }
         

@@ -1,5 +1,6 @@
 
 
+import datetime
 import json
 from logging import config, warn, warning
 from operator import is_
@@ -86,7 +87,7 @@ class ExperimentAnalyzer:
         analysis = {
             "experiment_id": self.experiment.id,
             "experiment_name": self.experiment.name,
-            "created_at": ...,
+            "created_at": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
             "config_summary": self.build_config_summary,
             "runs": {
                 "shockless": {

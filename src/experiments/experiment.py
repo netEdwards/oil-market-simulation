@@ -46,7 +46,7 @@ class Experiment:
 
     id: str = field(default_factory=lambda: uuid.uuid4().hex)
     created_at: str = field(
-        default_factory=lambda: datetime.now().isoformat(timespec="seconds")
+        default_factory=lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     )
 
     METADATA_FILENAME: ClassVar[str] = "experiment.json"
@@ -90,6 +90,10 @@ class Experiment:
     def output_path(self) -> Path:
         return self.folder_path / "runs"
 
+    @property
+    def analysis_path(self) -> Path:
+        return self.folder_path / "analysis.json"
+
     def to_dict(self) -> dict[str, Any]:
         """
         Metadata only. Intentionally excludes config_data.
@@ -128,7 +132,36 @@ class Experiment:
 
         return self.folder_path
 
+    def save_analysis(self, payload: dict) -> Path:
+        """Saves a generated analysis from the ExperimentAnalyzer class specifically. But can take any dict payload
 
+        Args:
+            payload (dict): Payload of analysis data
+
+        Returns:
+            Path: path to experiments analysis json
+        """
+        with self.analysis_path.open("w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, default=str)
+        return self.analysis_path
+    
+    def load_analysis(self) -> dict:
+        """Loads the analysis from the classes analysis_path property. If not present will raise. Use `has_analysis()` to check if an experiment has an analysis.
+
+        Raises:
+            FileNotFoundError: Missing file at path in class. Or it does not exist. 
+
+        Returns:
+            dict: full analysis payload.
+        """
+        if not self.analysis_path:
+            raise FileNotFoundError(f"No analysis found at: {self.analysis_path}")
+        
+        with self.analysis_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+        
+    def has_analysis(self) -> bool:
+        return self.analysis_path.exists()
 
     @classmethod
     def load(cls, folder_path: Path | str) -> "Experiment":
