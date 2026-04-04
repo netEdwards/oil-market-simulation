@@ -70,8 +70,8 @@ def main() -> None:
 
     outputs: dict[str, Any] = sim.export_all_outputs()
 
-    if not args.no_history_json:
-        outputs["history_json"] = sim.export_history_json()
+    # if not args.no_history_json:
+    #     outputs["history_json"] = sim.export_history_json()
 
     print("\nSimulation complete.")
     print(f"Run ID: {sim.run_id}")
