@@ -9,18 +9,28 @@ from PySide6.QtWidgets import (
     QPushButton,
     QFrame,
     QProgressBar,
+    QSpinBox,
+    QSlider,
 )
+from PySide6.QtCore import Qt
+
 
 
 class ExperimentRunnningScreen(QWidget):
     def __init__(
         self,
         on_back: Callable[[dict], None] | None = None,
+        on_delay_update: Callable[[int], None] | None = None,
+        on_skip_requested: Callable[[], None] | None = None,
+        on_cancel_request: Callable[[], None] | None = None,
         parent: QWidget | None = None,
     ):
         super().__init__()
         
         self.on_back = on_back
+        self.cancel_request = on_cancel_request
+        self.skip_request = on_skip_requested
+        self.delay_update = on_delay_update
         self.experiment: dict | None = None
         
         self._build_ui()
@@ -56,12 +66,39 @@ class ExperimentRunnningScreen(QWidget):
         
         self.phase_label = QLabel("Phase: ")
         
-        self.tick_progress_label = QLabel("Tick: ")
+        self.tick_progress_label = QLabel("Tick: 0 / 0")
         
         self.progress_bar = QProgressBar()
         # 0,0 puts progress ar into "busy" mode
-        self.progress_bar.setRange(0, 0)
-        self.progress_bar.setVisible(False)
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setVisible(True)
+        
+        self.cancel_button = QPushButton("Cancel")
+        cancel_button_font = self.cancel_button.font()
+        cancel_button_font.setItalic(True)
+        self.cancel_button.setFont(cancel_button_font)
+        
+        self.skip_button = QPushButton("Skip")
+        self.delay_spinbox = QSpinBox()
+        self.delay_slider = QSlider(Qt.Orientation.Horizontal)
+        self.delay_slider.setRange(0, 500)
+        self.delay_slider.setSingleStep(5)
+        self.delay_slider.setPageStep(25)
+        self.delay_slider.setValue(25)
+        self.delay_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.delay_slider.setTickInterval(25)
+        self.delay_value_label = QLabel("25 ms")
+        
+        self.run_controls = QFrame()
+        self.run_controls.setFrameShape(QFrame.Shape.Panel)
+        self.run_controls_layout = QHBoxLayout(self.run_controls)
+        self.run_controls_layout.setContentsMargins(12, 12, 12, 12)
+        self.run_controls_layout.setSpacing(12)
+        
+        self.run_controls_layout.addWidget(self.skip_button)
+        self.run_controls_layout.addWidget(self.cancel_button)
+        self.run_controls_layout.addWidget(self.delay_slider)
+        self.run_controls_layout.addWidget(self.delay_value_label)
         
         details_layout.addWidget(self.name_label)
         details_layout.addWidget(self.description_label)
@@ -70,6 +107,7 @@ class ExperimentRunnningScreen(QWidget):
         details_layout.addWidget(self.progress_bar)
         details_layout.addWidget(self.phase_label)
         details_layout.addWidget(self.tick_progress_label)
+        details_layout.addWidget(self.run_controls)
         
         root.addWidget(self.details_card)
         
@@ -85,6 +123,12 @@ class ExperimentRunnningScreen(QWidget):
         
     def _connect_signals(self) -> None:
         self.back_button.clicked.connect(self._handle_back)
+        self.cancel_button.clicked.connect(self._handle_cancel_request)
+        self.skip_button.clicked.connect(self._handle_skip_request)
+        self.delay_slider.valueChanged.connect(self._handle_delay_update)
+        self.delay_slider.valueChanged.connect(
+            lambda value: self.delay_value_label.setText(f"{value} ms")
+        )
         
     def set_experiment(self, experiment: dict) -> None:
         self.experiment = experiment
@@ -114,10 +158,11 @@ class ExperimentRunnningScreen(QWidget):
         self.back_button.setEnabled(False)
         
     def set_tick_progress(self, current_tick: int, total_ticks: int):
-        ...
+        tick_string = f"Ticks: {current_tick} / {total_ticks}"
+        self.tick_progress_label.setText(tick_string)
         
     def set_phase(self, text):
-        ...
+        self.phase_label.setText(f'Phase: {text}')
         
     def set_percent_progress(self, percent):
         self.progress_bar.setValue(percent) #not proper use?
@@ -126,6 +171,8 @@ class ExperimentRunnningScreen(QWidget):
         self.set_status("complete")
         self.progress_bar.setVisible(False)
         self.back_button.setEnabled(True)
+        self.tick_progress_label.setText("Ticks: ")
+        self.phase_label.setText("Phase: None")
         
     def set_failed_state(self, message: str | None = None) -> None:
         if message:
@@ -138,3 +185,16 @@ class ExperimentRunnningScreen(QWidget):
     def _handle_back(self) -> None:
         if self.on_back:
             self.on_back(self.experiment)
+            
+    def _handle_delay_update(self, delay: int) -> None:
+        if delay > 0 and self.delay_update:
+            self.delay_update(delay)
+        else: return
+        
+    def _handle_cancel_request(self) -> None:
+        if self.cancel_request:
+            self.cancel_request()
+       
+    def _handle_skip_request(self) -> None:
+        if self.skip_request:
+            self.skip_request()

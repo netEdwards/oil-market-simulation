@@ -2,18 +2,29 @@ from __future__ import annotations
 
 from ast import Call
 import csv
+from dataclasses import dataclass
 import datetime
+import time
 from typing import Any, Callable, Optional
 import uuid
 import json
 from pathlib import Path
+import warnings
 from experiments.experiment import Experiment
+
 from oilmarket.data.state import TimestepState
 from oilmarket.market import Market
 from oilmarket.shocks.shocks import Shock
 from oilmarket.data.simulation import SimulationConfig
 
 import matplotlib.pyplot as plot
+
+
+@dataclass
+class RunController:
+    tick_delay_ms: int = 25
+    skip_requsted: bool = False
+    cancel_request: bool = False
 
 class Simulation:
     def __init__(
@@ -22,6 +33,7 @@ class Simulation:
         do_shock: bool = True,
         experiment: Experiment = None,
         on_timestep: Optional[Callable[[int, TimestepState], None]] = None,
+        run_control: RunController = None,
     ):
         self.do_shock = do_shock
         self.on_timestep = on_timestep
@@ -31,7 +43,7 @@ class Simulation:
         self.run_id = uuid.uuid4()
         self.output_path = Path(self.config.output_path) / f"run-{self.run_id}"
         self.output_path.mkdir(parents=True, exist_ok=True)
-        
+        self.run_control = run_control
         
         self.run_type = "shock" if do_shock else "shockless"
         self.status = "Started"
@@ -44,9 +56,11 @@ class Simulation:
         Each tick executes the conceptual 'activity diagram' steps in order.
 
         """
+        
+        
         self.status = "running"
         for t in range(self.config.ticks):
-            #determine whetther shock is active this tick
+            
             tick_result = self.market.run_market_timestep(t)
             
             self.history.append(
@@ -55,6 +69,15 @@ class Simulation:
             
             if self.on_timestep is not None:
                 self.on_timestep(t, tick_result)
+                
+            if self.run_control:
+                if self.run_control.cancel_request:
+                    warnings.warn("Cancel requested from the run controller.")
+                    break
+                delay_ms = 0 if self.run_control.skip_requsted else self.run_control.tick_delay_ms
+            
+            if delay_ms > 0:
+                time.sleep(delay_ms / 1000)
             
         self.status = "complete"
         

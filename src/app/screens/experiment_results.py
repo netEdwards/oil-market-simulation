@@ -15,21 +15,28 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPicture, QPixmap
 
+from experiments.experiment import Experiment
+from experiments.experiment_executer import ExecutionResult
+
 
 class ExperimentResultsScreen(QWidget):
     def __init__(
         self, 
-        experiment: dict | None,
         on_back: Callable[[], None] | None,
     ) -> None:
         super().__init__()
         
-        self.experiment = experiment
+        # ------- DATA -------
+        self.experiment: Experiment | dict = None
+        self.execution_result: ExecutionResult = None
+        
+        self.analysis: dict = None
+        
+        
+        # ------- UI -------
+        
         self.on_back = on_back
-        
         self.outer_layout = QVBoxLayout(self)
-        
-        
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         
@@ -144,8 +151,13 @@ class ExperimentResultsScreen(QWidget):
         description = self.experiment.get("description", "No Description").strip()
         self.descritption_label.setText(f'Description: {description or ""}')
     
-    def set_experiment(self, experiment: dict) -> None:
-        self.experiment = experiment if experiment else None
+    def set_experiment_and_result(self, experiment: Experiment, execution_result: ExecutionResult) -> None:
+        self.experiment = experiment if isinstance(experiment, Experiment) else None #sometimes passed as dict, need to handle properly.
+        self.execution_result = execution_result #never passed as anything other than class instance.
+        
+        if self.experiment is None:
+            return
+        
         self._populate_details()
         self._create_experiment_vars()
         
