@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from ast import Call
 import csv
 import datetime
-from typing import Any
+from typing import Any, Callable, Optional
 import uuid
 import json
 from pathlib import Path
@@ -20,8 +21,10 @@ class Simulation:
         config: SimulationConfig,
         do_shock: bool = True,
         experiment: Experiment = None,
+        on_timestep: Optional[Callable[[int, TimestepState], None]] = None,
     ):
         self.do_shock = do_shock
+        self.on_timestep = on_timestep
         self.config = config
         self.market = Market(config=config, do_shock=self.do_shock)
         self.history: list[TimestepState] = []
@@ -49,6 +52,9 @@ class Simulation:
             self.history.append(
                 tick_result
             )
+            
+            if self.on_timestep is not None:
+                self.on_timestep(t, tick_result)
             
         self.status = "complete"
         
