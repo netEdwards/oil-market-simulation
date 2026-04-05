@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         
         self.experiment_results_page = ExperimentResultsScreen(
             on_back     = self.show_view_experiments_screen,
+            on_analysis = self.handle_experiment_analysis,
         )
         
         
@@ -259,3 +260,8 @@ class MainWindow(QMainWindow):
             return Experiment.load(experiment["folder_path"])
         raise TypeError("Experiment must be a dict or Experiment instance.")
     
+    
+    def handle_experiment_analysis(self):
+        if not self.current_experiment_instance:
+            return
+        self.current_experiment_instance

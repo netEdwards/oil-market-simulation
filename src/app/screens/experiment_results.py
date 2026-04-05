@@ -48,9 +48,39 @@ class ExperimentResultsScreen(QWidget):
         
         self.outer_layout.addWidget(self.scroll_area)
         
-        self._build_header()
-        self._build_graph_card()
-        self._connect_signals()
+        if not self.analysis:
+            self.content_layout.addWidget(self._build_no_results_screen())
+        else:
+            self._build_header()
+            self._build_graph_card()
+            self._connect_signals()
+        
+        
+    def _build_no_results_screen(self) -> QWidget:
+        
+        root = QWidget()
+        root_layout = QVBoxLayout(root)
+        
+        title_label = QLabel("Experiment Analysis")
+        title_label_font = title_label.font()
+        title_label_font.setBold(True)
+        title_label_font.setPointSize(16)
+        title_label.setFont(title_label_font)
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        main_text = QLabel("There is no experiment analysis for this experiment")
+        run_a_button = QPushButton("Run Analysis")
+        nr_back_button = QPushButton("Back")
+        
+        root_layout.setContentsMargins(16, 16, 16, 16)
+        root_layout.addWidget(title_label)
+        root_layout.addWidget(main_text)
+        root_layout.addWidget(run_a_button)
+        root_layout.addWidget(nr_back_button)
+        root_layout.addStretch()
+        
+        return root
+        
+        
         
     def _build_header(self) -> None:
         
