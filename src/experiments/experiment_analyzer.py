@@ -2,8 +2,6 @@
 
 import datetime
 import json
-from logging import config, warn, warning
-from operator import is_
 from pathlib import Path
 from typing import List
 import warnings
@@ -31,7 +29,7 @@ class ExperimentAnalyzer:
             self.execution_result = ExecutionResult(
                 success=execution_result.get("success"),
                 experiment_id=execution_result.get("experiment_id"),
-                shocked_results=execution_result.get("shocked_result"),
+                shocked_results=execution_result.get("shocked_results"),
                 shockless_results=execution_result.get("shockless_results"),
             )
         elif isinstance(execution_result, ExecutionResult):
@@ -50,7 +48,7 @@ class ExperimentAnalyzer:
         self.shockless_run_manifest:    dict = None
         self.shocked_execution_result   = self.execution_result.shocked_results
         self.shockless_execution_result = self.execution_result.shockless_results
-        
+        self.analysis:                  dict = None
         
         self._load_runs()
         
@@ -76,7 +74,7 @@ class ExperimentAnalyzer:
         return config_summary
        
     def build_all_analysis(self) -> dict:
-        if not self.shocked_run_history or self.shockless_run_history:
+        if not self.shocked_run_history or not self.shockless_run_history:
             raise AttributeError("Expected self to contain shocked and shockless run history, missing one.")
         
         
@@ -88,15 +86,15 @@ class ExperimentAnalyzer:
             "experiment_id": self.experiment.id,
             "experiment_name": self.experiment.name,
             "created_at": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
-            "config_summary": self.build_config_summary,
+            "config_summary": self.build_config_summary(),
             "runs": {
                 "shockless": {
-                    "run_id": self.shockless_run_manifest.get("id", ""),
+                    "run_id": self.shockless_run_manifest.get("run_id", ""),
                     "run_path": self.shockless_run_manifest.get("run_output_path", ""),
                     "manifest": self.shockless_run_manifest,
                 },
                 "shocked": {
-                    "run_id": self.shocked_run_manifest.get("id", ""),
+                    "run_id": self.shocked_run_manifest.get("run_id", ""),
                     "run_path": self.shocked_run_manifest.get("run_output_path", ""),
                     "manifest": self.shocked_run_manifest,
                 },
@@ -110,7 +108,17 @@ class ExperimentAnalyzer:
         
         return analysis
         
-       
+    def save_analysis(self) -> Path:
+        """Saves the analysis with current instance set experiment. Requires experiment to be present.
+        """
+        if not self.experiment:
+            raise AttributeError("Experiment is missing from the ExperimentAnalyzer instance.")
+        
+        if not self.analysis:
+            raise AttributeError("Expected self.analysis to be populated, was not. Try calling an analysis to be built.")
+        
+        analysis_path = self.experiment.save_analysis(self.analysis)
+        return analysis_path
         
     def build_price_analysis(self) -> dict:
         shocked_price_series = self.build_price_series(self.shocked_run_history)
@@ -135,14 +143,15 @@ class ExperimentAnalyzer:
             "shockless": {
                 "price_series": shockless_price_series,
                 "mean_price": shockless_mean_price,
-                "price_volatility": shocked_price_volatility,
+                "price_volatility": shockless_price_volatility,
             },
             "comparison": {
                 "delta_mean_price": delta_mean_price,
                 "delta_volatility": delta_volatility,
             }
         }
-       
+    
+    @staticmethod
     def compute_price_volatility(price_series: list[float]) -> float:
         if len(price_series) < 2:
             return 0.0
@@ -153,7 +162,8 @@ class ExperimentAnalyzer:
         
         return sum(changes) / len(changes)
         
-    def build_price_series(history: list) -> dict:
+    @staticmethod
+    def build_price_series(history: list) -> list[float]:
         return [t["average_price"] for t in history]
        
        
@@ -195,7 +205,8 @@ class ExperimentAnalyzer:
                 "delta_peak_unmet": shocked_peak_unmet - shockless_peak_unmet,
             }
         }
-           
+          
+    @staticmethod
     def build_fulfillment_series(history: list) -> dict:
         fulfilled = [t["total_units_sold"] for t in history]
         unmet = [t["total_unmet_demand"] for t in history]
@@ -207,6 +218,7 @@ class ExperimentAnalyzer:
             "demand": demand,
         }
         
+    @staticmethod
     def build_fulfillment_rate_series(history: list) -> list:
         rates = []
         for t in history:
@@ -251,10 +263,12 @@ class ExperimentAnalyzer:
                 "percent_avg_supply_change": avg_supply_pc,
             }
         }
-        
+       
+    @staticmethod 
     def build_supply_series(history: list) -> list:
         return [t["total_supply_available"] for t in history]
     
+    @staticmethod
     def build_inventory_series(history: list) -> list:
         return [t["total_inventory"] for t in history]
     
@@ -281,8 +295,8 @@ class ExperimentAnalyzer:
         self.shockless_run_history = self._load_run_history(self.shockless_execution_result)
         
         self.shocked_run_path = self.shocked_run_manifest.get("run_output_path", "")
-        self.shockless_run_path = self.shockless_run_manifest.get("run_output_pathh", "")
-        if not self.shocked_run_path or self.shockless_run_path:
+        self.shockless_run_path = self.shockless_run_manifest.get("run_output_path", "")
+        if not self.shocked_run_path or not self.shockless_run_path:
             warnings.warn("Run paths were not assigned.")      
     
     def _load_run_manifest(self, run_result: dict, path: str | Path = None) -> dict:
@@ -352,10 +366,12 @@ class ExperimentAnalyzer:
             raise Exception("There was an erorr when attempting to load the history json.")
         
         return history
-            
+     
+    @staticmethod       
     def _compute_mean_list(values: list[float]) -> float:
         return sum(values) / len(values) if values else 0.0
         
+    @staticmethod
     def _percent_change(old: float, new: float) -> float:
         if old == 0:
             return 0.0
