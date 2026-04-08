@@ -21,9 +21,12 @@ from PySide6.QtWidgets import (
     QSpinBox,
     QDoubleSpinBox,
     QComboBox,
+    QFileDialog,
+    QFrame
 )
 
 from experiments.experiment import Experiment
+from experiments.experiment_config_loader import ExperimentConfigLoader
 
 
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[3] / "default.yaml"
@@ -41,8 +44,11 @@ class NewExperimentScreen(QWidget):
         self.on_saved = on_saved
 
         self.default_config = self._load_default_config()
-
+        self.imported_config_data = None
+        
+        
         self._build_ui()
+        
         self._populate_defaults()
 
     def _load_default_config(self) -> dict[str, Any]:
@@ -70,6 +76,7 @@ class NewExperimentScreen(QWidget):
         self.form_layout.setSpacing(14)
 
         self._build_metadata_group()
+        self._build_upload_config()
         self._build_general_group()
         self._build_shock_group()
         self._build_buyers_group()
@@ -382,3 +389,161 @@ class NewExperimentScreen(QWidget):
 
         if self.on_saved:
             self.on_saved()
+            
+    def _build_upload_config(self) -> None:
+        """
+        Build a small config import section for the New Experiment screen.
+
+        Returns:
+            QWidget: section widget you can add into your page layout.
+        """
+        self.upload_config_section = QFrame()
+        self.upload_config_section.setFrameShape(QFrame.StyledPanel)
+
+        layout = QVBoxLayout(self.upload_config_section)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+
+        title_label = QLabel("Import Existing Config")
+        title_font = title_label.font()
+        title_font.setBold(True)
+        title_font.setPointSize(12)
+        title_label.setFont(title_font)
+
+        helper_label = QLabel(
+            "Upload a .yaml or .yml simulation config to populate the experiment form."
+        )
+        helper_label.setWordWrap(True)
+
+        button_row = QHBoxLayout()
+        self.upload_config_button = QPushButton("Upload Config")
+        self.upload_config_button.clicked.connect(self._on_upload_config_clicked)
+        button_row.addWidget(self.upload_config_button)
+        button_row.addStretch()
+
+        self.selected_config_label = QLabel("Selected file: None")
+        self.selected_config_label.setWordWrap(True)
+
+        self.config_import_status_label = QLabel("")
+        self.config_import_status_label.setWordWrap(True)
+        self.config_import_status_label.setTextFormat(Qt.PlainText)
+
+        layout.addWidget(title_label)
+        layout.addWidget(helper_label)
+        layout.addLayout(button_row)
+        layout.addWidget(self.selected_config_label)
+        layout.addWidget(self.config_import_status_label)
+
+        self.form_layout.addWidget(self.upload_config_section)
+
+
+    def _on_upload_config_clicked(self) -> None:
+        """
+        Open file picker and attempt to import a YAML config.
+        """
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Select Simulation Config",
+            "",
+            "YAML Files (*.yaml *.yml)",
+        )
+
+        if not file_path:
+            return
+
+        self._import_config_from_path(file_path)
+
+
+    def _import_config_from_path(self, file_path: str) -> None:
+        """
+        Validate and import config from a selected path.
+        """
+        path = Path(file_path)
+
+        # quick UI-side extension check
+        if path.suffix.lower() not in {".yaml", ".yml"}:
+            self._show_config_import_error(
+                "Invalid file type. Please select a .yaml or .yml file."
+            )
+            return
+
+        loader = ExperimentConfigLoader(path)
+        result = loader.load_and_validate()
+
+        self.selected_config_label.setText(f"Selected file: {path.name}")
+
+        if not result.is_valid:
+            error_text = result.error_message or "Config import failed."
+
+            if result.missing_fields:
+                missing = "\n".join(f"- {field}" for field in result.missing_fields)
+                error_text = f"{error_text}\n\nMissing fields:\n{missing}"
+
+            self.config_import_status_label.setText("Import failed.")
+            self._show_config_import_error(error_text)
+            return
+
+        config_data = result.config_data or {}
+        self.imported_config_data = config_data
+        self.config_import_status_label.setText("Config imported successfully.")
+
+        # Populate your form fields here
+        self._populate_form_from_config(config_data)
+
+
+    def _show_config_import_error(self, message: str) -> None:
+        """
+        Show a popup for config import errors.
+        """
+        QMessageBox.warning(self, "Config Import Error", message)
+
+
+    def _populate_form_from_config(self, config_data: dict) -> None:
+        """
+        Fill your New Experiment form widgets from imported config_data.
+
+        Replace the widget names below with your actual form widgets.
+        """
+        # Example top-level fields
+        self.ticks_input.setValue(config_data.get("ticks", 0))
+        self.seed_input.setValue(config_data.get("seed", 0))
+        self.base_price_input.setValue(config_data.get("base_price", 0.0))
+
+        # Shock
+        shock = config_data.get("shock", {})
+        self.shock_severity_input.setValue(shock.get("severity", 0.0))
+        self.shock_duration_input.setValue(shock.get("duration", 0))
+        self.shock_start_time_input.setValue(shock.get("start_time", 0))
+        self.shock_target_input.setCurrentText(shock.get("target", ""))
+
+        # Buyers
+        buyers = config_data.get("buyers", {})
+        self.buyers_count_input.setValue(buyers.get("count", 0))
+
+        wtp = buyers.get("wtp", {})
+        self.wtp_dist_input.setCurrentText(wtp.get("dist", "truncated_normal"))
+        self.wtp_mu_input.setValue(wtp.get("mu", 0.0))
+        self.wtp_sigma_input.setValue(wtp.get("sigma", 0.0))
+        self.wtp_min_input.setValue(wtp.get("_min", 0.0))
+        self.wtp_max_input.setValue(wtp.get("_max", 0.0))
+
+        demand = buyers.get("demand", {})
+        self.lambda_demand_input.setValue(demand.get("lambda_demand", 0.0))
+
+        # Sellers
+        sellers = config_data.get("sellers", {})
+        pricing = sellers.get("pricing", {})
+        self.min_price_input.setValue(pricing.get("min_price", 0.0))
+        self.target_utilization_input.setValue(pricing.get("target_utilization", 0.0))
+        self.responsiveness_input.setValue(pricing.get("responsiveness", 0.0))
+
+        major = sellers.get("major", {})
+        medium = sellers.get("medium", {})
+        small = sellers.get("small", {})
+        
+        self._set_seller_values(self.major_inputs, major)
+        self._set_seller_values(self.medium_inputs, medium)
+        self._set_seller_values(self.small_inputs, small)  
+                
+                
+                

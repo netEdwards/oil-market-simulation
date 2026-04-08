@@ -175,13 +175,36 @@ class MainWindow(QMainWindow):
         print(f'Edit requested for: {experiment.get("name")}')
 
     def _on_view_results_clicked(self, experiment: dict) -> None:
-        if not self.current_experiment_instance:
-            self.current_experiment_instance = self._coerce_experiment(experiment)
-            if self.current_experiment_instance.has_analysis():
-                analysis = self.current_experiment_instance.load_analysis()
-                print(f"Analysis loaded: {analysis.keys()}")
-                self.experiment_results_page.set_experiment_analysis(analysis)
-                self.show_experiment_results_page(self.current_experiment_instance, self.current_experiment_exec_result)
+        if not experiment:
+            print("No experiment passed.")
+            return
+        elif not self.current_experiment_instance:
+            self.current_experiment_instance = self._coerce_experiment(experiment=experiment)
+        
+        if not self.current_experiment_instance.has_analysis():
+            print("There is no current analysis for this experiment.")
+            self.experiment_results_page.show_no_analysis(experiment=self.current_experiment_instance)
+            self.experiment_results_page.refresh_analysis()
+            self.stack.setCurrentWidget(self.experiment_results_page)
+            
+        else:
+            analysis = self.current_experiment_instance.load_analysis()
+            if analysis:
+                self.experiment_results_page.show_analysis(experiment=self.current_experiment_instance, analysis=analysis)
+                self.experiment_results_page.refresh_analysis()
+                self.stack.setCurrentWidget(self.experiment_results_page)
+                
+        
+        
+        
+        
+        # if not self.current_experiment_instance:
+        #     self.current_experiment_instance = self._coerce_experiment(experiment)
+        #     if self.current_experiment_instance.has_analysis():
+        #         analysis = self.current_experiment_instance.load_analysis()
+        #         print(f"Analysis loaded: {analysis.keys()}")
+        #         self.experiment_results_page.set_experiment_analysis(analysis)
+        #         self.show_experiment_results_page(self.current_experiment_instance, self.current_experiment_exec_result)
     
     def _on_run_experiment_requested(self, experiment: dict) -> None:
         if not self.current_experiment_instance:
