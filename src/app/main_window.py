@@ -149,10 +149,22 @@ class MainWindow(QMainWindow):
         self.experiment_view_page.set_experiment(experiment)
         self.stack.setCurrentWidget(self.experiment_view_page)
         
-    def show_experiment_results_page(self, experiment: Experiment, execution_result: ExecutionResult | dict) -> None:
+    def show_experiment_results_page(self, experiment: Experiment | dict, analysis: dict = None) -> None:
         """Experiment results page requires an `Experiment` and `ExectutionResult` instance for methods attached!"""
+        self.current_experiment_instance = self._coerce_experiment(experiment)
+        
+        has_a = self.current_experiment_instance.has_analysis()    
+        if not has_a:
+            self.experiment_results_page.show_no_analysis(experiment=self.current_experiment_instance)
+            self.experiment_results_page.refresh_analysis()
+        else:
+            if not analysis:
+                analysis = self.current_experiment_instance.load_analysis()
+            self.experiment_results_page.show_analysis(self.current_experiment_instance, analysis)
+            self.experiment_results_page.refresh_analysis()
+        
         self.stack.setCurrentWidget(self.experiment_results_page)
-        self.experiment_results_page.set_experiment_and_result(experiment, execution_result)
+        
         
     def show_experiment_running_screen(self):
         self.stack.setCurrentWidget(self.experiment_running_page)
@@ -162,7 +174,6 @@ class MainWindow(QMainWindow):
 
     def _on_view_experiments_button_clicked(self):
         self.show_view_experiments_screen()
-        
         
     def _on_view_experiment_requested(self, experiment: dict):
         if not experiment:
@@ -178,33 +189,7 @@ class MainWindow(QMainWindow):
         if not experiment:
             print("No experiment passed.")
             return
-        elif not self.current_experiment_instance:
-            self.current_experiment_instance = self._coerce_experiment(experiment=experiment)
-        
-        if not self.current_experiment_instance.has_analysis():
-            print("There is no current analysis for this experiment.")
-            self.experiment_results_page.show_no_analysis(experiment=self.current_experiment_instance)
-            self.experiment_results_page.refresh_analysis()
-            self.stack.setCurrentWidget(self.experiment_results_page)
-            
-        else:
-            analysis = self.current_experiment_instance.load_analysis()
-            if analysis:
-                self.experiment_results_page.show_analysis(experiment=self.current_experiment_instance, analysis=analysis)
-                self.experiment_results_page.refresh_analysis()
-                self.stack.setCurrentWidget(self.experiment_results_page)
-                
-        
-        
-        
-        
-        # if not self.current_experiment_instance:
-        #     self.current_experiment_instance = self._coerce_experiment(experiment)
-        #     if self.current_experiment_instance.has_analysis():
-        #         analysis = self.current_experiment_instance.load_analysis()
-        #         print(f"Analysis loaded: {analysis.keys()}")
-        #         self.experiment_results_page.set_experiment_analysis(analysis)
-        #         self.show_experiment_results_page(self.current_experiment_instance, self.current_experiment_exec_result)
+        self.show_experiment_results_page(experiment)
     
     def _on_run_experiment_requested(self, experiment: dict) -> None:
         if not self.current_experiment_instance:
@@ -234,18 +219,25 @@ class MainWindow(QMainWindow):
     
     def _on_finished_emitted(self, experiment_result: ExecutionResult) -> None:
         self.experiment_running_page.set_complete_state()
-        self.execution_thread.quit()
-        self.execution_thread.wait()
         self.execution_thread = None
         self.execution_worker = None
         
         self.current_experiment_exec_result = experiment_result
            
     def _on_failed_emitted(self, error: str) -> None:
+        self.execution_worker = None
+        self.execution_thread = None
         self.experiment_running_page.set_failed_state()
         print("Emitted Error: ", error)
-         
+        
+    def _on_analysis_complete_emitted(self, analysis: dict) -> None:
+        self.show_experiment_results_page()
+        self.execution_worker = None
+        self.execution_thread = None
+        
     def _handle_analysis_failed(self, error: str) -> None:
+        self.execution_worker = None
+        self.execution_thread = None
         print(f"Error creating analysis: {error}")
          
     def _on_run_skip_requested(self) -> None:
@@ -264,24 +256,37 @@ class MainWindow(QMainWindow):
             worker.request_cancel()
     
     def _execute_experiment(self, experiment: dict) -> None:
-        
         if not experiment:
             return
-        
-        worker = ExecutionWorker(experiment)
-        thread = QThread()
+
+        # fresh worker + fresh thread every run
+        self.execution_worker = ExecutionWorker(experiment)
+        self.execution_thread = QThread()
+
+        worker = self.execution_worker
+        thread = self.execution_thread
+
         worker.moveToThread(thread)
+
+        # start the worker when thread starts
         thread.started.connect(worker.run)
-        
-        self.execution_worker = worker
-        self.execution_thread = thread
-        
+
+        # original UI / progress functionality
         worker.progress.connect(self._on_progress_emitted)
         worker.finished.connect(self._on_finished_emitted)
         worker.failed.connect(self._on_failed_emitted)
         worker.timestep_update.connect(self._on_timestep_emitted)
         worker.execution_update.connect(self._on_execution_update)
-        
+
+        # proper thread shutdown
+        worker.finished.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+
+        worker.finished.connect(worker.deleteLater)
+        worker.failed.connect(worker.deleteLater)
+
+        thread.finished.connect(thread.deleteLater)
+
         thread.start()
         
     def _coerce_experiment(self, experiment: dict | Experiment) -> Experiment:
@@ -301,40 +306,47 @@ class MainWindow(QMainWindow):
         
         return self.current_experiment_instance.load_analysis()
     
-    def handle_experiment_analysis(self):
+    def handle_experiment_analysis(self) -> None:
         if not self.current_experiment_instance:
             raise Exception("There is no current experiment set.")
-        
+
         if not self.current_experiment_instance.has_execution():
             print("No execution for this experiment has been completed.")
-            # turn into popup.
-        elif not self.current_experiment_exec_result:
+            return
+
+        if not self.current_experiment_exec_result:
             print("Execution result exists, but not loaded - attempting to load...")
             self.current_experiment_exec_result = self.current_experiment_instance.load_execution()
             print("Execution result loaded!")
-        
-        if not self.execution_thread:
-            self.execution_thread = QThread()
-        if self.execution_worker:
-            worker = self.execution_worker
-        else:
-            self.execution_worker = ExecutionWorker(
-                experiment=self.current_experiment_instance,
-                execution_result=self.current_experiment_exec_result,
-            )
-            
-            
-        
+
+        # fresh worker + fresh thread every analysis
+        self.execution_worker = ExecutionWorker(
+            experiment=self.current_experiment_instance,
+            execution_result=self.current_experiment_exec_result,
+        )
+        self.execution_thread = QThread()
+
         worker = self.execution_worker
-        thread = self.execution_thread    
+        thread = self.execution_thread
+
         worker.moveToThread(thread)
-        
+
+        # start analysis when thread starts
         thread.started.connect(worker.run_analysis)
-        
-        
-        worker.analysis_complete.connect(self.experiment_results_page.set_experiment_analysis)
+
+        # original result / error handling
+        worker.analysis_complete.connect(self._on_analysis_complete_emitted)
         worker.failed.connect(self._handle_analysis_failed)
-        
+
+        # proper thread shutdown
+        worker.analysis_complete.connect(thread.quit)
+        worker.failed.connect(thread.quit)
+
+        worker.analysis_complete.connect(worker.deleteLater)
+        worker.failed.connect(worker.deleteLater)
+
+        thread.finished.connect(thread.deleteLater)
+
         thread.start()
         
     
