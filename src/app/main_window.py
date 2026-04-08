@@ -17,6 +17,7 @@ from app.screens.experiment_viewer import ExperimentViewerScreen
 from app.screens.experiment_running import ExperimentRunnningScreen
 from app.experiment_runner_controller import ExecutionWorker
 from experiments.experiment import Experiment
+from experiments.experiment_analyzer import ExperimentAnalyzer
 from experiments.experiment_executer import ExecutionResult
 from app.screens.experiment_results import ExperimentResultsScreen
 from oilmarket.data.state import TimestepState
@@ -32,6 +33,8 @@ class MainWindow(QMainWindow):
         self.current_experiment_instance: Experiment = None
         self.current_experiment_exec_result: ExecutionResult | dict = None
         self.experiments_list: List[Experiment] = []
+        self.execution_thread: QThread = None
+        self.execution_worker: ExecutionWorker = None
 
         self._set_central_widget()
         self._connect_signals()
@@ -174,9 +177,11 @@ class MainWindow(QMainWindow):
     def _on_view_results_clicked(self, experiment: dict) -> None:
         if not self.current_experiment_instance:
             self.current_experiment_instance = self._coerce_experiment(experiment)
-            
-        
-        self.show_experiment_results_page(self.current_experiment_instance, self.current_experiment_exec_result)
+            if self.current_experiment_instance.has_analysis():
+                analysis = self.current_experiment_instance.load_analysis()
+                print(f"Analysis loaded: {analysis.keys()}")
+                self.experiment_results_page.set_experiment_analysis(analysis)
+                self.show_experiment_results_page(self.current_experiment_instance, self.current_experiment_exec_result)
     
     def _on_run_experiment_requested(self, experiment: dict) -> None:
         if not self.current_experiment_instance:
@@ -216,6 +221,9 @@ class MainWindow(QMainWindow):
     def _on_failed_emitted(self, error: str) -> None:
         self.experiment_running_page.set_failed_state()
         print("Emitted Error: ", error)
+         
+    def _handle_analysis_failed(self, error: str) -> None:
+        print(f"Error creating analysis: {error}")
          
     def _on_run_skip_requested(self) -> None:
         worker = self.execution_worker
@@ -260,8 +268,50 @@ class MainWindow(QMainWindow):
             return Experiment.load(experiment["folder_path"])
         raise TypeError("Experiment must be a dict or Experiment instance.")
     
+    def _get_current_experiment_analysis(self) -> dict | None:
+        
+        if not self.current_experiment_instance:
+            return None
+        
+        if not self.current_experiment_instance.has_analysis():
+            return None
+        
+        return self.current_experiment_instance.load_analysis()
     
     def handle_experiment_analysis(self):
         if not self.current_experiment_instance:
-            return
-        self.current_experiment_instance
+            raise Exception("There is no current experiment set.")
+        
+        if not self.current_experiment_instance.has_execution():
+            print("No execution for this experiment has been completed.")
+            # turn into popup.
+        elif not self.current_experiment_exec_result:
+            print("Execution result exists, but not loaded - attempting to load...")
+            self.current_experiment_exec_result = self.current_experiment_instance.load_execution()
+            print("Execution result loaded!")
+        
+        if not self.execution_thread:
+            self.execution_thread = QThread()
+        if self.execution_worker:
+            worker = self.execution_worker
+        else:
+            self.execution_worker = ExecutionWorker(
+                experiment=self.current_experiment_instance,
+                execution_result=self.current_experiment_exec_result,
+            )
+            
+            
+        
+        worker = self.execution_worker
+        thread = self.execution_thread    
+        worker.moveToThread(thread)
+        
+        thread.started.connect(worker.run_analysis)
+        
+        
+        worker.analysis_complete.connect(self.experiment_results_page.set_experiment_analysis)
+        worker.failed.connect(self._handle_analysis_failed)
+        
+        thread.start()
+        
+    

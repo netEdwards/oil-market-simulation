@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPicture, QPixmap
+from pkg_resources import non_empty_lines
 
 from experiments.experiment import Experiment
 from experiments.experiment_executer import ExecutionResult
@@ -23,6 +24,7 @@ class ExperimentResultsScreen(QWidget):
     def __init__(
         self, 
         on_back: Callable[[], None] | None,
+        on_analysis: Callable[[], None] | None,
     ) -> None:
         super().__init__()
         
@@ -36,6 +38,7 @@ class ExperimentResultsScreen(QWidget):
         # ------- UI -------
         
         self.on_back = on_back
+        self.on_run_analysis = on_analysis
         self.outer_layout = QVBoxLayout(self)
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -49,11 +52,14 @@ class ExperimentResultsScreen(QWidget):
         self.outer_layout.addWidget(self.scroll_area)
         
         if not self.analysis:
+            print(f"No analysis: {self.analysis}")
             self.content_layout.addWidget(self._build_no_results_screen())
         else:
             self._build_header()
             self._build_graph_card()
             self._connect_signals()
+            
+        self._connect_init_signals()
         
         
     def _build_no_results_screen(self) -> QWidget:
@@ -68,14 +74,14 @@ class ExperimentResultsScreen(QWidget):
         title_label.setFont(title_label_font)
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_text = QLabel("There is no experiment analysis for this experiment")
-        run_a_button = QPushButton("Run Analysis")
-        nr_back_button = QPushButton("Back")
+        self.run_a_button = QPushButton("Run Analysis")
+        self.nr_back_button = QPushButton("Back")
         
         root_layout.setContentsMargins(16, 16, 16, 16)
         root_layout.addWidget(title_label)
         root_layout.addWidget(main_text)
-        root_layout.addWidget(run_a_button)
-        root_layout.addWidget(nr_back_button)
+        root_layout.addWidget(self.run_a_button)
+        root_layout.addWidget(self.nr_back_button)
         root_layout.addStretch()
         
         return root
@@ -146,6 +152,15 @@ class ExperimentResultsScreen(QWidget):
         
         root.setLayout(root_layout)
         self.content_layout.addWidget(root)
+    
+    def _buid_shockless_frame(self):
+        ...
+        
+        
+    def _build_shocked_frame(self):
+        ...
+        
+
         
     def _build_graph_card(self) -> None:
         root = QFrame()
@@ -168,10 +183,21 @@ class ExperimentResultsScreen(QWidget):
         
         
         
-        
+    def _connect_init_signals(self)  -> None:
+        self.nr_back_button.clicked.connect(lambda: self._handle_back())
+        self.run_a_button.clicked.connect(lambda: self._handle_run_analysis())
         
     def _connect_signals(self) -> None:
         self.back_button.clicked.connect(lambda: self._handle_back())
+        
+        
+    def _populate_header(self) -> None:
+        if not self.analysis:
+            return
+        
+        
+        self.name_label.setText(f"Name: {self.experiment.name}")
+        self.descritption_label.setText(f"Description: {self.experiment.description}")
         
     def _populate_details(self)-> None:
         if not self.experiment:
@@ -188,17 +214,24 @@ class ExperimentResultsScreen(QWidget):
         if self.experiment is None:
             return
         
-        self._populate_details()
-        self._create_experiment_vars()
         
+    def set_experiment_analysis(self, analysis: dict) -> None:
+        if not self.analysis:
+            self.analysis = analysis
+            print(f"Analysis set: {analysis.keys()}")
+    
     def _create_experiment_vars(self) -> None:
         if not self.experiment:
             return
         
         print(self.experiment)
         
-        
+    
         
     def _handle_back(self) -> None:
         if self.on_back:
             self.on_back()
+            
+    def _handle_run_analysis(self) -> None:
+        if self.on_run_analysis:
+            self.on_run_analysis()
