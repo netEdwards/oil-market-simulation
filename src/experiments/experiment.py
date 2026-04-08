@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import json
 from logging import config
+from operator import is_
 from os import name
 import re
+import shutil
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -93,6 +95,10 @@ class Experiment:
     @property
     def analysis_path(self) -> Path:
         return self.folder_path / "analysis.json"
+    
+    @property
+    def execution_result_path(self) -> Path:
+        return self.folder_path / "execution_result.json"
 
     def to_dict(self) -> dict[str, Any]:
         """
@@ -162,6 +168,34 @@ class Experiment:
         
     def has_analysis(self) -> bool:
         return self.analysis_path.exists()
+
+    def save_execution(self, payload: dict) -> Path:        
+        with open(self.execution_result_path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, default=str)
+
+        return self.execution_result_path
+    
+    def load_execution(self) -> dict:
+        if not self.execution_result_path.exists():
+            raise FileNotFoundError(f"No execution result found at: {self.execution_result_path}")
+
+        with self.execution_result_path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+        
+    def has_execution(self) -> bool:
+        return self.execution_result_path.exists()
+
+    def clear_runs(self) -> None:
+        runs_path = self.folder_path / "runs"
+        
+        if not runs_path.exists():
+            return
+        
+        for item in runs_path.iterdir():
+            if item.is_dir():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
 
     @classmethod
     def load(cls, folder_path: Path | str) -> "Experiment":
