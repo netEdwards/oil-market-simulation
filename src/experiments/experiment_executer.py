@@ -1,8 +1,10 @@
 
 
 from dataclasses import dataclass
+from fileinput import filename
 from math import exp
 from typing import Any, Callable, Dict, Optional
+import uuid
 import warnings
 
 from experiments import experiment
@@ -17,7 +19,16 @@ class ExecutionResult:
     experiment_id: str
     shocked_results: dict
     shockless_results: dict
-
+    id: str = "execution-" + str(uuid.uuid4())
+    
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "success": self.success,
+            "experiment_id": self.experiment_id,
+            "shocked_results": self.shocked_results,
+            "shockless_results": self.shockless_results
+        }
 
 
 class ExperimentExecuter:
@@ -66,6 +77,12 @@ class ExperimentExecuter:
                     raise Exception("There is no configuration loadable from the experiment.")
         
         # =======================
+        # Clear experiment runs
+        #==========================
+        self.experiment.clear_runs()
+        
+        
+        # =======================
         # Two simulation runs - One Shocked, One Shockless
         #==========================
         
@@ -95,10 +112,13 @@ class ExperimentExecuter:
         
         
         
-        return ExecutionResult(
+        exec_result =  ExecutionResult(
             success=True,
             experiment_id=self.experiment.id,
             shocked_results=shocked_ouputs,
             shockless_results=shockless_outputs,
         )
+        self.experiment.save_execution(exec_result.to_dict())
+        
+        return exec_result
         

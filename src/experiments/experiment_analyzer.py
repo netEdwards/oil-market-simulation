@@ -38,8 +38,6 @@ class ExperimentAnalyzer:
             raise ValueError("Execution result was not passed in a readable way. (dict or class ExecutionResult).")
             
         
-        self.output_path = self.experiment.output_path / "experiment_analyzer"
-        
         self.shocked_run_path:          str | Path = None
         self.shockless_run_path:        str | Path = None
         self.shockless_run_history:     dict | list = None
@@ -283,8 +281,7 @@ class ExperimentAnalyzer:
         Load the runs from this experiment into the experiment analyzer.
         """
         
-        if not self.output_path.exists():
-            self.output_path.mkdir(parents=True)
+        
             
         if not self.execution_result:
             raise AttributeError("Expected attribute execution_result to be present.")

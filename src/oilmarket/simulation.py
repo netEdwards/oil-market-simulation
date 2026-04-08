@@ -245,6 +245,13 @@ class Simulation:
                 "total_units_sold": state.total_units_sold,
                 "total_unmet_demand": state.total_unmet_demand,
                 "average_price": state.average_price,
+                "total_demand": state.total_demand,
+                "total_inventory": state.total_inventory,
+                "total_supply_available": state.total_supply_available,
+                "min_price": state.min_price,
+                "max_price": state.max_price,
+                "shock_active": state.shock_active,
+                "transaction_count": state.transaction_count,
             }
             history_payload.append(state_dict)
 
