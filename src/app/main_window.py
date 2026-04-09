@@ -219,25 +219,17 @@ class MainWindow(QMainWindow):
     
     def _on_finished_emitted(self, experiment_result: ExecutionResult) -> None:
         self.experiment_running_page.set_complete_state()
-        self.execution_thread = None
-        self.execution_worker = None
         
         self.current_experiment_exec_result = experiment_result
            
     def _on_failed_emitted(self, error: str) -> None:
-        self.execution_worker = None
-        self.execution_thread = None
         self.experiment_running_page.set_failed_state()
         print("Emitted Error: ", error)
         
     def _on_analysis_complete_emitted(self, analysis: dict) -> None:
-        self.show_experiment_results_page()
-        self.execution_worker = None
-        self.execution_thread = None
+        self.show_experiment_results_page(experiment=self.current_experiment_instance, analysis=analysis)
         
     def _handle_analysis_failed(self, error: str) -> None:
-        self.execution_worker = None
-        self.execution_thread = None
         print(f"Error creating analysis: {error}")
          
     def _on_run_skip_requested(self) -> None:
