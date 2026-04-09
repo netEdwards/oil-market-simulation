@@ -1,3 +1,4 @@
+from ctypes import alignment
 from pathlib import Path
 from typing import Callable, Literal
 
@@ -146,6 +147,7 @@ class ExperimentResultsScreen(QWidget):
         self.name_label = QLabel("Name: ")
         name_label_font = self.name_label.font()
         name_label_font.setBold(True)
+        name_label_font.setPointSize(14)
         self.name_label.setFont(name_label_font)
         
         self.descritption_label = QLabel("Description: ")
@@ -154,7 +156,9 @@ class ExperimentResultsScreen(QWidget):
         
         
         self.cards_layout.addWidget(self.name_label)
+        self.cards_layout.addSpacing(10)
         self.cards_layout.addWidget(self.descritption_label)
+        self.cards_layout.addSpacing(10)
         
         
         
@@ -184,7 +188,7 @@ class ExperimentResultsScreen(QWidget):
     
     
     def _build_price_analysis(self):
-        self.price_analysis_section = QWidget()
+        self.price_analysis_section = QWidget(maximumWidth=1000, minimumWidth=500)
         self.pas_layout = QVBoxLayout(self.price_analysis_section)
         self.pas_layout.setContentsMargins(12, 12, 12, 12)
         self.l_pas_title = QLabel("Price Analysis")
@@ -207,7 +211,7 @@ class ExperimentResultsScreen(QWidget):
         self.pas_layout.addWidget(self.l_pas_title)
         self.pas_layout.addWidget(self.price_a_tabs)
         
-        self.analysis_content_layout.addWidget(self.price_analysis_section)
+        self.analysis_content_layout.addWidget(self.price_analysis_section, alignment=Qt.AlignmentFlag.AlignCenter)
         
     def _build_pa_tab(self, section: Literal["shockless", "shocked", "comparison"]):
         if not section:
@@ -241,7 +245,7 @@ class ExperimentResultsScreen(QWidget):
         
     
     def _build_fulfillment_analysis(self):
-        self.fulfillment_analysis_section = QWidget()
+        self.fulfillment_analysis_section = QWidget(maximumWidth=1000, minimumWidth=500)
         self.fas_layout = QVBoxLayout(self.fulfillment_analysis_section)
         self.fas_layout.setContentsMargins(12, 12, 12, 12)
         self.l_fas_title = QLabel("Fulfillment Analysis")
@@ -264,7 +268,7 @@ class ExperimentResultsScreen(QWidget):
         self.fas_layout.addWidget(self.l_fas_title)
         self.fas_layout.addWidget(self.fulfillment_a_tabs)
         
-        self.analysis_content_layout.addWidget(self.fulfillment_analysis_section)
+        self.analysis_content_layout.addWidget(self.fulfillment_analysis_section, alignment=Qt.AlignmentFlag.AlignCenter)
         
     def _build_fa_tab(self, section: Literal["shockless", "shocked", "comparison"]):
         if not section:
@@ -298,7 +302,7 @@ class ExperimentResultsScreen(QWidget):
 
         
     def _build_supply_analysis(self):
-        self.supply_analysis_section = QWidget()
+        self.supply_analysis_section = QWidget(maximumWidth=1000, minimumWidth=500)
         self.sas_layout = QVBoxLayout(self.supply_analysis_section)
         self.sas_layout.setContentsMargins(12, 12, 12, 12)
         self.l_sas_title = QLabel("Supply Analysis")
@@ -321,7 +325,7 @@ class ExperimentResultsScreen(QWidget):
         self.sas_layout.addWidget(self.l_sas_title)
         self.sas_layout.addWidget(self.supply_a_tabs)
         
-        self.analysis_content_layout.addWidget(self.supply_analysis_section)
+        self.analysis_content_layout.addWidget(self.supply_analysis_section, alignment=Qt.AlignmentFlag.AlignCenter)
         
     def _build_sa_tab(self, section: Literal["shockless", "shocked", "comparison"]):
         if not section:
@@ -376,7 +380,9 @@ class ExperimentResultsScreen(QWidget):
         shockless_snd_plot_path = self.execution_result["shockless_results"].get("supply_demand_plot")
         shockless_fulfillment_plot_path = self.execution_result["shockless_results"].get("fulfillment_plot")
         
-        self.graph_container = QWidget()
+        self.graph_container = QWidget(
+            maximumWidth=1500,
+        )
         self.gc_layout = QVBoxLayout(self.graph_container)
         self.gc_layout.setContentsMargins(12, 12, 12, 12)
         
@@ -398,7 +404,7 @@ class ExperimentResultsScreen(QWidget):
         
         self.gc_shockless_tabs = QTabWidget()
         
-        self.sl_graph_pl_tab    = self._build_graph_card(shockless_price_plot_path, title="Shocked Prices / Time", caption="Shows the average prices over time.")
+        self.sl_graph_pl_tab    = self._build_graph_card(shockless_price_plot_path, title="Shockless Prices / Time", caption="Shows the average prices over time.")
         self.sl_graph_snd_tab   = self._build_graph_card(shockless_snd_plot_path, title="Supply and Demand Graph", caption="Shows the supply vs demand over time.")
         self.sl_graph_ff_tab    = self._build_graph_card(shockless_fulfillment_plot_path, title="Fullfilment / Time", caption="Shows the fulfillment behavior over time.")
 
@@ -414,7 +420,7 @@ class ExperimentResultsScreen(QWidget):
         self.gc_layout.addWidget(self.gc_shockless_title)
         self.gc_layout.addWidget(self.gc_shockless_tabs)
         
-        self.analysis_content_layout.addWidget(self.graph_container)
+        self.analysis_content_layout.addWidget(self.graph_container, alignment=Qt.AlignmentFlag.AlignCenter)
 
     def _build_graph_card(
         self,
@@ -502,7 +508,9 @@ class ExperimentResultsScreen(QWidget):
             ticks = config_sum.get("ticks", "")
             num_buyers = buyers.get("count", 0)
             num_sellers = seller_count
-            
+        
+        self.name_label.setText(f"Name: {self.experiment.name}")
+        self.descritption_label.setText(f"Description {self.experiment.description.strip()}")
         self.ticks_label.setText(f"Ticks: {ticks}")
         self.num_buyers_label.setText(f"Number of Buyers: {num_buyers}")
         self.num_sellers_label.setText(f"Number of Sellers: {num_sellers}")
@@ -574,6 +582,7 @@ class ExperimentResultsScreen(QWidget):
     def refresh_analysis(self):
         self.clear_layout(self.analysis_content_layout)
 
+        self.execution_result = None
         self._build_header()
         self._build_price_analysis()
         self._build_fulfillment_analysis()
