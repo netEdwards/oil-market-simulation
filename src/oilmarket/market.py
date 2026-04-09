@@ -15,44 +15,7 @@ from oilmarket.data.simulation import BuyerConfig, SellerConfig, SimulationConfi
 from oilmarket.data.state import BuyerSnapshot, SellerSnapshot, TimestepState, Transaction
 from oilmarket.shocks.shocks import Shock
 
-"""
-This market class is old. It was for a demo of the concept....
 
-"""
-@dataclass
-class OldMarket:
-    producers: List[Producer] = field(default_factory=list)
-    consumers: List[Consumer] = field(default_factory=list)
-    price: float = 100.0
-    k: float = 0.1
-    
-    def reset(self, seed: int) -> None:
-        random.seed(seed)
-        
-    def step(self, tick:int, shock_multiplier: float = 1.0) -> Dict[str, float]:
-        # Producers produce (shock affects capacity)
-        total_supply = 0.0
-        for p in self.producers:
-            total_supply += p.produce(price=self.price, capacity_multiplier = shock_multiplier)
-            
-        # Consumers demand (later shocks will affect demand as well)
-        total_demand = 0.0
-        for c in self.consumers:
-            total_demand += c.demand(price=self.price)
-            
-        # Market clearing=ish price update
-        imbalance = (total_demand - total_supply)
-        denom = max(1.0, total_supply)
-        self.price *= math.exp(self.k * (imbalance / denom))
-        
-        #clamp to prevent runaway
-        self.price = max(1.0, min(self.price, 10_000.0))
-
-        return {
-            "price": float(self.price),
-            "total_supply": float(total_supply),
-            "total_demand": float(total_demand),
-        }
         
         
     
@@ -140,7 +103,7 @@ class Market:
             
             if not selected_seller:
                 total_unmet_demand+=b.demand
-                
+                total_demand+=init_demand
                 # Add snapshot for no sellers selected
                 buyer_snapshots.append(BuyerSnapshot(
                     buyer_id=b.id,
