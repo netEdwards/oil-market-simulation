@@ -306,6 +306,7 @@ class Market:
         #create major sellers first
         majors = self.sellers_config.major
         m_count = majors.count
+        min_price = self.sellers_config.pricing.min_price
         for i in range(m_count):
             sellers.append(Seller(
                 price=majors.init_price or self.config.base_price,
@@ -313,7 +314,8 @@ class Market:
                 capacity=majors.capacity,
                 prod_rate=majors.prod_rate,
                 target_util=t_util, #currently broad across tiers
-                tier="major"
+                tier="major",
+                min_price=min_price,
             ))
         
         #create medium sellers
@@ -326,7 +328,8 @@ class Market:
                 prod_rate=m_sellers.prod_rate,
                 capacity=m_sellers.capacity,
                 target_util=t_util,
-                tier="medium"
+                tier="medium",
+                min_price=min_price,
             ))
             
         #small sellers
@@ -339,7 +342,8 @@ class Market:
                 prod_rate=s_sellers.prod_rate,
                 capacity=s_sellers.capacity,
                 target_util=t_util,
-                tier="small"
+                tier="small",
+                min_price=min_price,
             ))
             
         total_count = m_count + md_count + s_count

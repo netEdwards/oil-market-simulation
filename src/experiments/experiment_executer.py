@@ -79,7 +79,7 @@ class ExperimentExecuter:
         # =======================
         # Clear experiment runs
         #==========================
-        self.experiment.clear_runs()
+        self.experiment.clear_experiment()
         
         
         # =======================

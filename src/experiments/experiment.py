@@ -185,6 +185,11 @@ class Experiment:
     def has_execution(self) -> bool:
         return self.execution_result_path.exists()
 
+    def clear_experiment(self) -> None:
+        self.clear_runs()
+        self.clear_analysis()
+        self.clear_execution()
+
     def clear_runs(self) -> None:
         runs_path = self.folder_path / "runs"
         
@@ -196,6 +201,20 @@ class Experiment:
                 shutil.rmtree(item)
             else:
                 item.unlink()
+
+    def clear_execution(self) -> None:
+        if not self.has_execution(): return
+        
+        path = self.execution_result_path
+        if path.exists() and path.is_file():
+            path.unlink()
+        
+    def clear_analysis(self) -> None:
+        if not self.has_analysis: return
+        
+        path = self.analysis_path
+        if path.exists() and path.is_file():
+            path.unlink()
 
     @classmethod
     def load(cls, folder_path: Path | str) -> "Experiment":

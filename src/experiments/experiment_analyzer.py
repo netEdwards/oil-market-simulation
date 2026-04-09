@@ -130,6 +130,7 @@ class ExperimentAnalyzer:
         
         # Comparisons
         delta_mean_price = shocked_mean_price - shockless_mean_price
+        percent_change = delta_mean_price / shockless_mean_price
         delta_volatility = shocked_price_volatility - shockless_price_volatility
         
         return {
@@ -145,6 +146,7 @@ class ExperimentAnalyzer:
             },
             "comparison": {
                 "delta_mean_price": delta_mean_price,
+                "percent_change": percent_change,
                 "delta_volatility": delta_volatility,
             }
         }
@@ -372,7 +374,7 @@ class ExperimentAnalyzer:
     def _percent_change(old: float, new: float) -> float:
         if old == 0:
             return 0.0
-        return ((new - old) / old) * 100.0
+        return ((new - old) / old) 
         
         
         

@@ -229,17 +229,20 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             mean_price = self.analysis["price"][section]["mean_price"]
             price_vol = self.analysis["price"][section]["price_volatility"]
-            self.l_sl_mean_price = QLabel(f"Mean Price: {mean_price}")
-            self.l_sl_price_vol = QLabel(f"Price Volatility: {price_vol}")
+            self.l_sl_mean_price = QLabel(f"Mean Price: {mean_price:.2f}")
+            self.l_sl_price_vol = QLabel(f"Price Volatility: {price_vol:.2f}")
             self.pas_widget_layout.addWidget(self.l_sl_mean_price)
             self.pas_widget_layout.addWidget(self.l_sl_price_vol)
         elif section == "comparison":
             delta_mean = self.analysis["price"]["comparison"]["delta_mean_price"]
             delta_pv = self.analysis["price"]["comparison"]["delta_volatility"]
-            self.l_sl_delta_mp = QLabel(f"Delta Mean Price: {delta_mean}")
-            self.l_sl_delta_pv = QLabel(f"Delta Price Volatility: {delta_pv}")
+            percent_change = self.analysis["price"]["comparison"]["percent_change"]
+            self.l_sl_delta_mp = QLabel(f"Delta Mean Price: {delta_mean:.2f}")
+            self.l_sl_delta_pv = QLabel(f"Delta Price Volatility: {delta_pv:.2f}")
+            self.l_sl_price_pc = QLabel(f"Price Percent Change: {percent_change:.2%}")
             self.pas_widget_layout.addWidget(self.l_sl_delta_mp)
-            self.pas_widget_layout.addWidget(self.l_sl_delta_pv)        
+            self.pas_widget_layout.addWidget(self.l_sl_delta_pv)
+            self.pas_widget_layout.addWidget(self.l_sl_price_pc)        
         
         return self.pa_tab
         
@@ -286,15 +289,15 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             ff_rate = self.analysis["fulfillment"][section]["fulfillment_rate"]
             peak_unmet = self.analysis["fulfillment"][section]["peak_unmet"]
-            self.l_sl_ff_rate = QLabel(f"Fulfillment Rate: {ff_rate}")
-            self.l_sl_peak_unmet = QLabel(f"Peak Unmet Demand: {peak_unmet}")
+            self.l_sl_ff_rate = QLabel(f"Fulfillment Rate: {ff_rate:.2%}")
+            self.l_sl_peak_unmet = QLabel(f"Peak Unmet Demand: {peak_unmet:.2f}")
             self.fas_widget_layout.addWidget(self.l_sl_ff_rate)
             self.fas_widget_layout.addWidget(self.l_sl_peak_unmet)
         elif section == "comparison":
             delta_ff_rate = self.analysis["fulfillment"]["comparison"]["delta_fulfillment_rate"]
             delta_peak_unmet = self.analysis["fulfillment"]["comparison"]["delta_peak_unmet"]
-            self.l_sl_delta_ff_rate = QLabel(f"Delta Fulfillment Rate: {delta_ff_rate}")
-            self.l_sl_delta_peak_unmet = QLabel(f"Delta Peak Unmet Demand: {delta_peak_unmet}")
+            self.l_sl_delta_ff_rate = QLabel(f"Delta Fulfillment Rate: {delta_ff_rate:.2%}")
+            self.l_sl_delta_peak_unmet = QLabel(f"Delta Peak Unmet Demand: {delta_peak_unmet:.2f}")
             self.fas_widget_layout.addWidget(self.l_sl_delta_ff_rate)
             self.fas_widget_layout.addWidget(self.l_sl_delta_peak_unmet)        
         
@@ -343,17 +346,17 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             avg_supply = self.analysis["supply"][section]["avg_supply"]
             min_supply = self.analysis["supply"][section]["min_supply"]
-            self.l_sl_avg_supply = QLabel(f"Average Supply: {avg_supply}")
-            self.l_sl_min_supply = QLabel(f"Minimum Supply: {min_supply}")
+            self.l_sl_avg_supply = QLabel(f"Average Supply: {avg_supply:.2f}")
+            self.l_sl_min_supply = QLabel(f"Minimum Supply: {min_supply:.2f}")
             self.sas_widget_layout.addWidget(self.l_sl_avg_supply)
             self.sas_widget_layout.addWidget(self.l_sl_min_supply)
         elif section == "comparison":
             delta_avg_supply = self.analysis["supply"]["comparison"]["delta_avg_supply"]
             delta_min_supply = self.analysis["supply"]["comparison"]["delta_min_supply"]
             percent_avg_supply_change = self.analysis["supply"]["comparison"]["percent_avg_supply_change"]
-            self.l_sl_delta_avg_s = QLabel(f"Delta Average Supply: {delta_avg_supply}")
-            self.l_sl_delta_min_s = QLabel(f"Delta Minimum Supply: {delta_min_supply}")
-            self.l_sl_delta_perc_avg_s = QLabel(f"Percent Delta Avg Supply: {percent_avg_supply_change}")
+            self.l_sl_delta_avg_s = QLabel(f"Delta Average Supply: {delta_avg_supply:.2f}")
+            self.l_sl_delta_min_s = QLabel(f"Delta Minimum Supply: {delta_min_supply:.2f}")
+            self.l_sl_delta_perc_avg_s = QLabel(f"Percent Delta Avg Supply: {percent_avg_supply_change:.2%}")
             self.sas_widget_layout.addWidget(self.l_sl_delta_avg_s)
             self.sas_widget_layout.addWidget(self.l_sl_delta_min_s) 
             self.sas_widget_layout.addWidget(self.l_sl_delta_perc_avg_s)        

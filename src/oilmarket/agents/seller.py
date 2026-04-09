@@ -14,13 +14,14 @@ class Seller:
     
     def __init__(
         self,
-        id: str = "",
+        id:             str = "",
         price:          float = 0.0,
         inventory:      float = 0.0,
         prod_rate:      float = 0.0,
         capacity:       float = 0.0,
         target_util:    float = 0.80,
         tier:           Literal["major", "medium", "small"] = None,
+        min_price:      float = 1.0,
         ):
         self.id          = str(uuid.uuid4())
         self.price       = price
@@ -29,7 +30,7 @@ class Seller:
         self.capacity    = capacity
         self.target_util = target_util
         self.tier        = tier
-        
+        self.min_price   = min_price
         #variable util vars
         self.utilization = 0
         self.units_sold  = 0
@@ -42,7 +43,10 @@ class Seller:
         if self.units_sold == 0:
             #log units sold as 0
             return
-        util = self.units_sold / self.prod_rate
+        if self.prod_rate == 0:
+            util = 0
+        else:
+            util = self.units_sold / self.prod_rate
         self.utilization = util
         
     def _rest(self):
@@ -76,6 +80,9 @@ class Seller:
         util = self.utilization
         t_uti = self.target_util
         new_price = max(0, (cur_price * (1+k*(util - t_uti)) ))
+        if new_price < self.min_price:
+            diff = self.min_price - new_price
+            new_price+= diff
         self.price = round(new_price, 2)
         
     def update_units_sold(self, units):
