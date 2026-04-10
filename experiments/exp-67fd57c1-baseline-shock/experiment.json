@@ -1,0 +1,11 @@
+{
+    "id": "67fd57c191b64debbfa3678529dabbd9",
+    "name": "Baseline Shock",
+    "slug": "baseline-shock",
+    "folder_name": "exp-67fd57c1-baseline-shock",
+    "description": "Normal, healthy market with a minor shock introduced.",
+    "created_at": "2026-04-08T11:52:18",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-67fd57c1-baseline-shock\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-67fd57c1-baseline-shock"
+}

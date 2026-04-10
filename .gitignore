@@ -3,3 +3,9 @@ __init__.py
 *.egg-info
 __pycache__
 *.pyc
+*/runs
+analysis.json
+execution_result.json
+*.csv
+*.png
+history.json

@@ -1,0 +1,41 @@
+seed: 42
+ticks: 120
+base_price: 100.0
+shock:
+  severity: 0.3
+  duration: 15
+  start_time: 0.5
+  target: top_seller
+buyers:
+  count: 100
+  wtp:
+    dist: truncated_normal
+    mu: 125.0
+    sigma: 20.0
+    _min: 0.0
+    _max: 300.0
+  demand:
+    lambda_demand: 3.0
+sellers:
+  major:
+    count: 2
+    prod_rate: 45.0
+    capacity: 1800.0
+    init_inventory: 220.0
+    init_price: 120.0
+  medium:
+    count: 4
+    prod_rate: 25.0
+    capacity: 400.0
+    init_inventory: 90.0
+    init_price: 115.0
+  small:
+    count: 2
+    prod_rate: 12.0
+    capacity: 150.0
+    init_inventory: 70.0
+    init_price: 110.0
+  pricing:
+    min_price: 90.0
+    target_utilization: 0.8
+    responsiveness: 0.1

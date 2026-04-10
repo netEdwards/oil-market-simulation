@@ -1,0 +1,11 @@
+{
+    "id": "bee19b0c7200429a904279e27b81ee9b",
+    "name": "Undersupplied Market",
+    "slug": "undersupplied-market",
+    "folder_name": "exp-bee19b0c-undersupplied-market",
+    "description": "There is a shortage in supply under somewhat nominal demand needs.",
+    "created_at": "2026-04-08T11:59:16",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-bee19b0c-undersupplied-market\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-bee19b0c-undersupplied-market"
+}

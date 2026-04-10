@@ -1,0 +1,11 @@
+{
+    "id": "e7c755dc272d4bbaac4e2a1a7b3b03a4",
+    "name": "Simulation Duration: 200",
+    "slug": "simulation-duration-200",
+    "folder_name": "exp-e7c755dc-simulation-duration-200",
+    "description": "Shock 0.4 30 ticks, sim duration 200",
+    "created_at": "2026-04-10T10:46:44",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-e7c755dc-simulation-duration-200\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-e7c755dc-simulation-duration-200"
+}

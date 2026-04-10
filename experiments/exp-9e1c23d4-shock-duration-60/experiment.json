@@ -1,0 +1,11 @@
+{
+    "id": "9e1c23d4353547afb6e9f8213ad890b4",
+    "name": "Shock Duration: 60",
+    "slug": "shock-duration-60",
+    "folder_name": "exp-9e1c23d4-shock-duration-60",
+    "description": "Same as baseline shock config but shock is set to 0.9",
+    "created_at": "2026-04-10T10:12:56",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-9e1c23d4-shock-duration-60\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-9e1c23d4-shock-duration-60"
+}

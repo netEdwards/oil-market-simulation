@@ -1,0 +1,9 @@
+{
+  "run_output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-167f8fd5-responsivess-0-2\\runs\\run-05ce990c-aba7-4488-9fb3-62a8ab6ff7cf",
+  "run_id": "05ce990c-aba7-4488-9fb3-62a8ab6ff7cf",
+  "experiment_id": "167f8fd5728c4a8284d5ad229c5a2f06",
+  "run_type": "shock",
+  "shock_enabled": true,
+  "created_at": "2026-04-10T11:11:05",
+  "status": "complete"
+}

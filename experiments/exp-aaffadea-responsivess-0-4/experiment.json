@@ -1,0 +1,11 @@
+{
+    "id": "aaffadeac14e4be88d35cce64bd348e9",
+    "name": "Responsivess: 0.4",
+    "slug": "responsivess-0-4",
+    "folder_name": "exp-aaffadea-responsivess-0-4",
+    "description": "Same as basline - K = 0.4",
+    "created_at": "2026-04-10T11:09:06",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-aaffadea-responsivess-0-4\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-aaffadea-responsivess-0-4"
+}

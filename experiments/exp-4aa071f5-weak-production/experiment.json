@@ -1,0 +1,11 @@
+{
+    "id": "4aa071f508154f0692d7e20781179476",
+    "name": "Weak Production",
+    "slug": "weak-production",
+    "folder_name": "exp-4aa071f5-weak-production",
+    "description": "Everything is somewhat normal other than the production rate, it is slightly lower than what the market demands.",
+    "created_at": "2026-04-08T12:00:03",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-4aa071f5-weak-production\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-4aa071f5-weak-production"
+}

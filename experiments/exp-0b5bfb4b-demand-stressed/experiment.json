@@ -1,0 +1,11 @@
+{
+    "id": "0b5bfb4b68af49b3aecb376827db2d3f",
+    "name": "Demand Stressed",
+    "slug": "demand-stressed",
+    "folder_name": "exp-0b5bfb4b-demand-stressed",
+    "description": "A market variation that features buyers who have elevated demand, putting stress on the sellers.",
+    "created_at": "2026-04-08T11:57:14",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-0b5bfb4b-demand-stressed\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-0b5bfb4b-demand-stressed"
+}

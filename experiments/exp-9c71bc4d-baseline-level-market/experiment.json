@@ -1,0 +1,11 @@
+{
+    "id": "9c71bc4d0fe248c0a4dfd442dee5eed1",
+    "name": "Baseline - Level market.",
+    "slug": "baseline-level-market",
+    "folder_name": "exp-9c71bc4d-baseline-level-market",
+    "description": "Market has almost as much demand as supply production. Initial inventory rates match a tick running before it being depleted.",
+    "created_at": "2026-04-09T20:34:21",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-9c71bc4d-baseline-level-market\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-9c71bc4d-baseline-level-market"
+}

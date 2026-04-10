@@ -1,0 +1,9 @@
+{
+  "run_output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-1984be04-baseline-shock-higher-shock-value\\runs\\run-3271c6d7-7bb6-4849-8b8c-c7fa11cb8c73",
+  "run_id": "3271c6d7-7bb6-4849-8b8c-c7fa11cb8c73",
+  "experiment_id": "1984be04ba804762b38e1e536acd4ee7",
+  "run_type": "shockless",
+  "shock_enabled": false,
+  "created_at": "2026-04-09T23:33:43",
+  "status": "complete"
+}

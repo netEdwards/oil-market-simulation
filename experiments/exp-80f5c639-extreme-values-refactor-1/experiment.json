@@ -1,0 +1,11 @@
+{
+    "id": "80f5c63958374a16913d6494bb840a97",
+    "name": "Extreme Values - Refactor 1",
+    "slug": "extreme-values-refactor-1",
+    "folder_name": "exp-80f5c639-extreme-values-refactor-1",
+    "description": "The previous extreme values experiment shows prices diving to 0 within the first 10-20 ticks. This is to try to investigate why.",
+    "created_at": "2026-04-09T08:55:47",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-80f5c639-extreme-values-refactor-1\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-80f5c639-extreme-values-refactor-1"
+}

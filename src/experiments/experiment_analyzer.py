@@ -2,7 +2,9 @@
 
 import datetime
 import json
+from os import set_inheritable
 from pathlib import Path
+import stat
 from typing import List
 import warnings
 
@@ -128,6 +130,24 @@ class ExperimentAnalyzer:
         shocked_price_volatility = self.compute_price_volatility(shocked_price_series)
         shockless_price_volatility = self.compute_price_volatility(shockless_price_series)
         
+        #shockless price percent change
+        sl_price_pc = self.compute_perc_change_price(shockless_price_series)
+        s_price_pc = self.compute_perc_change_price(shocked_price_series)
+        
+        sl_mean_abs_change = sum(sl_price_pc) / len(sl_price_pc)
+        s_mean_abs_change = sum(s_price_pc) / len(s_price_pc)
+        
+        s_min_price = min(shocked_price_series)
+        sl_min_price = min(shockless_price_series)
+        
+        sl_peak_price = max(shockless_price_series)
+        s_peak_price = max(shocked_price_series)
+        print("Shockless min/max:", sl_min_price, sl_peak_price)
+        print("Shocked min/max:", s_min_price, s_peak_price)
+        
+        sl_max_price_change = max(sl_price_pc)
+        s_max_price_change = max(s_price_pc)
+        
         # Comparisons
         delta_mean_price = shocked_mean_price - shockless_mean_price
         percent_change = delta_mean_price / shockless_mean_price
@@ -136,13 +156,23 @@ class ExperimentAnalyzer:
         return {
             "shocked": {
                 "price_series": shocked_price_series,
+                "price_perc_change_series": s_price_pc,
                 "mean_price": shocked_mean_price,
                 "price_volatility": shocked_price_volatility,
+                "mean_price_change": s_mean_abs_change,
+                "min_price": s_min_price,
+                "peak_price": s_peak_price,
+                "max_price_change": s_max_price_change,
             },
             "shockless": {
                 "price_series": shockless_price_series,
+                "price_perc_change_series": sl_price_pc,
                 "mean_price": shockless_mean_price,
                 "price_volatility": shockless_price_volatility,
+                "mean_price_change": sl_mean_abs_change,
+                "min_price": sl_min_price,
+                "peak_price": sl_peak_price,
+                "max_price_change": sl_max_price_change,
             },
             "comparison": {
                 "delta_mean_price": delta_mean_price,
@@ -163,6 +193,21 @@ class ExperimentAnalyzer:
         return sum(changes) / len(changes)
         
     @staticmethod
+    def compute_perc_change_price(price_series: list[float]) -> list[float]:
+        
+        if not price_series: return
+        
+        changes = []
+        
+        for i in range(1, len(price_series)):
+            percent_change = (price_series[i] - price_series[i-1]) / price_series[i-1]
+            changes.append(abs(percent_change))
+            
+        return changes
+            
+        
+
+    @staticmethod
     def build_price_series(history: list) -> list[float]:
         return [t["average_price"] for t in history]
        
@@ -175,6 +220,12 @@ class ExperimentAnalyzer:
         
         shocked_ff_rate_series = self.build_fulfillment_rate_series(self.shocked_run_history)
         shockless_ff_rate_series = self.build_fulfillment_rate_series(self.shockless_run_history)
+        
+        s_ff_rate_change = self.calculate_ff_rate_changes(shocked_ff_rate_series)
+        sl_ff_rate_change = self.calculate_ff_rate_changes(shockless_ff_rate_series)
+        
+        s_mean_ff_rate_change = sum(s_ff_rate_change) / len(s_ff_rate_change)
+        sl_mean_ff_rate_change = sum(sl_ff_rate_change) / len(sl_ff_rate_change)
         
         s_total_sold = sum(shocked_ff_series["fulfilled"])
         s_total_demand = sum(shocked_ff_series["demand"])
@@ -193,12 +244,14 @@ class ExperimentAnalyzer:
                 "unmet_series": shocked_ff_series["unmet"],
                 "fulfillment_rate": s_ff_rate,
                 "peak_unmet": shocked_peak_unmet,
+                "mean_change_rate": s_mean_ff_rate_change,
             },
             "shockless": {
               "fulfilled_series": shockless_ff_series["fulfilled"],
               "unmet_series": shockless_ff_series["unmet"],
               "fulfillment_rate": sl_ff_rate,
-              "peak_unmet": shockless_peak_unmet
+              "peak_unmet": shockless_peak_unmet,
+              "mean_change_rate": sl_mean_ff_rate_change,
             },
             "comparison": {
                 "delta_fulfillment_rate": s_ff_rate - sl_ff_rate,
@@ -228,8 +281,16 @@ class ExperimentAnalyzer:
                 rates.append(t["total_units_sold"] / t["total_demand"])
         
         return rates
+    
+    @staticmethod  
+    def calculate_ff_rate_changes(series: list[float]):
+        if not series: return
+        changes = []
+        for i in range(len(series)):
+            change = series[i] - series[i-1]
+            changes.append(abs(change))
         
-        
+        return changes
         
         
         
@@ -242,6 +303,19 @@ class ExperimentAnalyzer:
         sl_min_supply = min(shockless_supply_series)
         sl_avg_supply = self._compute_mean_list(shockless_supply_series)
         
+        sl_supply_pc = self.calculate_percent_change_supply(shockless_supply_series)
+        s_supply_pc = self.calculate_percent_change_supply(shocked_supply_series)
+        
+        sl_mean_supply_pc = sum(sl_supply_pc) / len(sl_supply_pc)
+        s_mean_supply_pc = sum(s_supply_pc) / len(s_supply_pc)
+        
+        print(f"Shockless mean supply pc: {sl_mean_supply_pc}")
+        print(f"Shockled mean supply pc: {s_mean_supply_pc}")
+        
+        sl_peak_supply_change = max(sl_supply_pc)
+        s_peak_supply_change = max(s_supply_pc)
+        
+        
         #percent change = pc
         avg_supply_pc = self._percent_change(sl_avg_supply, s_avg_supply)
     
@@ -251,11 +325,15 @@ class ExperimentAnalyzer:
                 "supply_series": shocked_supply_series,
                 "avg_supply": s_avg_supply,
                 "min_supply": s_min_supply,
+                "supply_pc": s_mean_supply_pc,
+                "peak_supply_change": s_peak_supply_change,
             },
             "shockless": {
                 "supply_series": shockless_supply_series,
                 "avg_supply": sl_avg_supply,
                 "min_supply": sl_min_supply,
+                "supply_pc": sl_mean_supply_pc,
+                "peak_supply_change": sl_peak_supply_change,
             },
             "comparison": {
                 "delta_avg_supply": s_avg_supply - sl_avg_supply,
@@ -272,7 +350,32 @@ class ExperimentAnalyzer:
     def build_inventory_series(history: list) -> list:
         return [t["total_inventory"] for t in history]
     
-    
+    @staticmethod
+    def calculate_percent_change_supply(series: list[float]) -> list[float]:
+        if not series:
+            return []
+
+        changes = []
+
+        for i in range(1, len(series)):
+            prev = series[i - 1]
+            curr = series[i]
+
+            if prev == 0:
+                print("HELLO?")
+                # Handle edge case explicitly
+                if curr == 0:
+                    change = 0.0  # no change
+                else:
+                    change = None  # undefined / skip / special case
+            else:
+                change = (curr - prev) / prev
+
+            if change is not None:
+                changes.append(change)
+
+        return changes
+            
     
     
     

@@ -1,0 +1,11 @@
+{
+    "id": "fc9b2e00322c4f14bd5365f057376941",
+    "name": "Oversupplied Market",
+    "slug": "oversupplied-market",
+    "folder_name": "exp-fc9b2e00-oversupplied-market",
+    "description": "The market features sellers with more supply than the demand needs.",
+    "created_at": "2026-04-08T11:58:22",
+    "config_file": "config.yaml",
+    "output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-fc9b2e00-oversupplied-market\\runs",
+    "folder_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-fc9b2e00-oversupplied-market"
+}

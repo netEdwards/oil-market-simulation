@@ -1,0 +1,9 @@
+{
+  "run_output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-9c71bc4d-baseline-level-market\\runs\\run-6bc9a1a1-9a5d-43c1-97a0-3f5f36189e78",
+  "run_id": "6bc9a1a1-9a5d-43c1-97a0-3f5f36189e78",
+  "experiment_id": "9c71bc4d0fe248c0a4dfd442dee5eed1",
+  "run_type": "shock",
+  "shock_enabled": true,
+  "created_at": "2026-04-09T21:45:22",
+  "status": "complete"
+}

@@ -1,0 +1,9 @@
+{
+  "run_output_path": "C:\\CS_4632\\oil-market-simulation\\experiments\\exp-80f5c639-extreme-values-refactor-1\\runs\\run-baf8bf61-17c2-4056-a396-275d5fb079c2",
+  "run_id": "baf8bf61-17c2-4056-a396-275d5fb079c2",
+  "experiment_id": "80f5c63958374a16913d6494bb840a97",
+  "run_type": "shock",
+  "shock_enabled": true,
+  "created_at": "2026-04-09T08:55:57",
+  "status": "complete"
+}

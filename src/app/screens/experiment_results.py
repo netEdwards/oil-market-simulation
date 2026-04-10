@@ -229,10 +229,24 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             mean_price = self.analysis["price"][section]["mean_price"]
             price_vol = self.analysis["price"][section]["price_volatility"]
+            mean_perc_pc = self.analysis["price"][section]["mean_price_change"]
+            min_price = self.analysis["price"][section]["min_price"]
+            peak_price = self.analysis["price"][section]["peak_price"]
+            max_price_change = self.analysis["price"][section]["max_price_change"]
+            
             self.l_sl_mean_price = QLabel(f"Mean Price: {mean_price:.2f}")
             self.l_sl_price_vol = QLabel(f"Price Volatility: {price_vol:.2f}")
+            self.l_sl_mean_price_change = QLabel(f"Avg Percent Change: {mean_perc_pc:.2%}")
+            self.l_sl_peak_price = QLabel(f"Peak Price: {peak_price:.2f}")
+            self.l_sl_min_price = QLabel(f"Min Price: {min_price:.2f}")
+            self.l_sl_max_price_change = QLabel(f"Max Price Change: {max_price_change:.2%}")
+            
             self.pas_widget_layout.addWidget(self.l_sl_mean_price)
             self.pas_widget_layout.addWidget(self.l_sl_price_vol)
+            self.pas_widget_layout.addWidget(self.l_sl_mean_price_change)
+            self.pas_widget_layout.addWidget(self.l_sl_peak_price)
+            self.pas_widget_layout.addWidget(self.l_sl_min_price)
+            self.pas_widget_layout.addWidget(self.l_sl_max_price_change)
         elif section == "comparison":
             delta_mean = self.analysis["price"]["comparison"]["delta_mean_price"]
             delta_pv = self.analysis["price"]["comparison"]["delta_volatility"]
@@ -289,10 +303,14 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             ff_rate = self.analysis["fulfillment"][section]["fulfillment_rate"]
             peak_unmet = self.analysis["fulfillment"][section]["peak_unmet"]
+            mean_rate_change = self.analysis["fulfillment"][section]["mean_change_rate"]
             self.l_sl_ff_rate = QLabel(f"Fulfillment Rate: {ff_rate:.2%}")
             self.l_sl_peak_unmet = QLabel(f"Peak Unmet Demand: {peak_unmet:.2f}")
+            self.l_sl_mean_cr = QLabel(f"Mean FF Rate Change: {mean_rate_change:2%}")
+            
             self.fas_widget_layout.addWidget(self.l_sl_ff_rate)
             self.fas_widget_layout.addWidget(self.l_sl_peak_unmet)
+            self.fas_widget_layout.addWidget(self.l_sl_mean_cr)
         elif section == "comparison":
             delta_ff_rate = self.analysis["fulfillment"]["comparison"]["delta_fulfillment_rate"]
             delta_peak_unmet = self.analysis["fulfillment"]["comparison"]["delta_peak_unmet"]
@@ -346,10 +364,16 @@ class ExperimentResultsScreen(QWidget):
         if section == "shockless" or section == "shocked":
             avg_supply = self.analysis["supply"][section]["avg_supply"]
             min_supply = self.analysis["supply"][section]["min_supply"]
+            supply_pc = self.analysis["supply"][section]["supply_pc"]
+            peak_supply_change = self.analysis["supply"][section]["peak_supply_change"]
             self.l_sl_avg_supply = QLabel(f"Average Supply: {avg_supply:.2f}")
             self.l_sl_min_supply = QLabel(f"Minimum Supply: {min_supply:.2f}")
+            self.l_sl_supply_pc = QLabel(f"Mean Supply Change %: {supply_pc:.2%}")
+            self.l_sl_peak_supply_pc = QLabel(f"Peak % Change: {peak_supply_change:.2%}")
             self.sas_widget_layout.addWidget(self.l_sl_avg_supply)
             self.sas_widget_layout.addWidget(self.l_sl_min_supply)
+            self.sas_widget_layout.addWidget(self.l_sl_supply_pc)
+            self.sas_widget_layout.addWidget(self.l_sl_peak_supply_pc)
         elif section == "comparison":
             delta_avg_supply = self.analysis["supply"]["comparison"]["delta_avg_supply"]
             delta_min_supply = self.analysis["supply"]["comparison"]["delta_min_supply"]
